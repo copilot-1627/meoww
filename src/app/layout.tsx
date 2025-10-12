@@ -1,86 +1,11 @@
+"use client"
+
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
 import './globals.css'
+import { SessionProvider } from 'next-auth/react'
 
-const inter = Inter({ subsets: ['latin'] })
-
-export const metadata: Metadata = {
-  title: {
-    default: 'FreeDNS - Free DNS Services | Subdomain Management Platform',
-    template: '%s | FreeDNS'
-  },
-  description: 'Create and manage free subdomains with advanced DNS record support. Professional DNS services powered by Flaxa Technologies with A, CNAME, and SRV record management.',
-  keywords: ['free dns', 'subdomain', 'dns management', 'free subdomain', 'dns hosting', 'domain hosting', 'flaxa technologies'],
-  authors: [{ name: 'Flaxa Technologies', url: 'https://flaxa.tech' }],
-  creator: 'Flaxa Technologies',
-  publisher: 'Flaxa Technologies',
-  formatDetection: {
-    email: false,
-    address: false,
-    telephone: false,
-  },
-  metadataBase: new URL('https://freedns.flaxa.tech'),
-  alternates: {
-    canonical: '/',
-  },
-  openGraph: {
-    type: 'website',
-    locale: 'en_US',
-    url: 'https://freedns.flaxa.tech',
-    title: 'FreeDNS - Free DNS Services | Subdomain Management Platform',
-    description: 'Create and manage free subdomains with advanced DNS record support. Professional DNS services powered by Flaxa Technologies.',
-    siteName: 'FreeDNS',
-    images: [{
-      url: '/og-image.png',
-      width: 1200,
-      height: 630,
-      alt: 'FreeDNS - Professional DNS Services',
-    }],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'FreeDNS - Free DNS Services',
-    description: 'Create and manage free subdomains with advanced DNS record support.',
-    images: ['/og-image.png'],
-    creator: '@flaxatech',
-  },
-  robots: {
-    index: true,
-    follow: true,
-    nocache: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      noimageindex: false,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-    },
-  },
-  icons: {
-    icon: [
-      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
-      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
-      { url: '/favicon-96x96.png', sizes: '96x96', type: 'image/png' },
-    ],
-    shortcut: '/favicon.ico',
-    apple: [
-      { url: '/apple-icon-57x57.png', sizes: '57x57' },
-      { url: '/apple-icon-60x60.png', sizes: '60x60' },
-      { url: '/apple-icon-72x72.png', sizes: '72x72' },
-      { url: '/apple-icon-76x76.png', sizes: '76x76' },
-      { url: '/apple-icon-114x114.png', sizes: '114x114' },
-      { url: '/apple-icon-120x120.png', sizes: '120x120' },
-      { url: '/apple-icon-144x144.png', sizes: '144x144' },
-      { url: '/apple-icon-152x152.png', sizes: '152x152' },
-      { url: '/apple-icon-180x180.png', sizes: '180x180' },
-    ],
-  },
-  manifest: '/manifest.json',
-  verification: {
-    google: 'your-google-site-verification-code',
-  },
-}
+// Use system fonts to avoid loading issues
+const systemFonts = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
 
 export default function RootLayout({
   children,
@@ -90,15 +15,58 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link rel="dns-prefetch" href="https://checkout.razorpay.com" />
+        <title>FreeDNS - Free DNS Services | Subdomain Management Platform</title>
+        <meta name="description" content="Create and manage free subdomains with advanced DNS record support. Professional DNS services powered by Flaxa Technologies with A, CNAME, and SRV record management." />
+        <meta name="keywords" content="free dns, subdomain, dns management, free subdomain, dns hosting, domain hosting, flaxa technologies" />
+        <meta name="author" content="Flaxa Technologies" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#3B82F6" />
         <meta name="msapplication-TileColor" content="#3B82F6" />
-        <meta name="msapplication-config" content="/browserconfig.xml" />
+        
+        {/* Favicon */}
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+        <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />
+        <link rel="shortcut icon" href="/favicon.ico" />
+        
+        {/* Apple Touch Icons */}
+        <link rel="apple-touch-icon" sizes="57x57" href="/apple-icon-57x57.png" />
+        <link rel="apple-touch-icon" sizes="60x60" href="/apple-icon-60x60.png" />
+        <link rel="apple-touch-icon" sizes="72x72" href="/apple-icon-72x72.png" />
+        <link rel="apple-touch-icon" sizes="76x76" href="/apple-icon-76x76.png" />
+        <link rel="apple-touch-icon" sizes="114x114" href="/apple-icon-114x114.png" />
+        <link rel="apple-touch-icon" sizes="120x120" href="/apple-icon-120x120.png" />
+        <link rel="apple-touch-icon" sizes="144x144" href="/apple-icon-144x144.png" />
+        <link rel="apple-touch-icon" sizes="152x152" href="/apple-icon-152x152.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-icon-180x180.png" />
+        
+        {/* Manifest */}
+        <link rel="manifest" href="/manifest.json" />
+        
+        {/* Open Graph */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://freedns.flaxa.tech" />
+        <meta property="og:title" content="FreeDNS - Free DNS Services | Subdomain Management Platform" />
+        <meta property="og:description" content="Create and manage free subdomains with advanced DNS record support. Professional DNS services powered by Flaxa Technologies." />
+        <meta property="og:image" content="/og-image.png" />
+        <meta property="og:site_name" content="FreeDNS" />
+        
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="FreeDNS - Free DNS Services" />
+        <meta name="twitter:description" content="Create and manage free subdomains with advanced DNS record support." />
+        <meta name="twitter:image" content="/og-image.png" />
+        <meta name="twitter:creator" content="@flaxatech" />
+        
+        {/* Preconnect for performance */}
+        <link rel="dns-prefetch" href="https://checkout.razorpay.com" />
       </head>
-      <body className={inter.className}>
-        {children}
+      <body style={{ fontFamily: systemFonts }} className="min-h-screen bg-gray-50">
+        <SessionProvider>
+          {children}
+        </SessionProvider>
+        
+        {/* Structured Data */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
