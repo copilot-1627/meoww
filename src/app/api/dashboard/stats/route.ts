@@ -1,31 +1,22 @@
-import { getServerSession } from "next-auth/next"
-import { authOptions } from "@/lib/auth"
-import { UserStorage, SubdomainStorage, DnsRecordStorage } from "@/lib/storage"
+import { requireAuth } from "@/lib/auth-middleware"
+import { SubdomainStorage, DnsRecordStorage } from "@/lib/storage"
 import { NextResponse } from "next/server"
 
 export async function GET() {
+  const authResult = await requireAuth()
+  if (authResult instanceof NextResponse) {
+    return authResult
+  }
+
+  const { user } = authResult
+
   try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-    
-    // Find user by email
-    const user = await UserStorage.findByEmail(session.user.email)
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
-    }
-    
-    // Get user statistics
     const subdomainCount = await SubdomainStorage.countByUserId(user.id)
-    const recordCount = await DnsRecordStorage.countByUserId(user.id)
     
     const stats = {
       subdomainCount,
-      recordCount,
-      monthlyQueries: Math.floor(Math.random() * 1000), // Mock data for now
-      currentPlan: user.plan || 'Free'
+      subdomainLimit: user.subdomainLimit,
+      currentPlan: user.plan || 'FREE'
     }
     
     return NextResponse.json(stats)
