@@ -48,19 +48,19 @@ export const TransactionService = {
   },
 
   getTransaction: async (id: string) => {
-    const response = await fetch(`/api/transactions/${id}`)
+    const response = await fetch(`/api/transactions/${encodeURIComponent(id)}`)
     if (!response.ok) throw new Error('Failed to get transaction')
     return response.json()
   },
 
   getTransactionByOrderId: async (orderId: string) => {
-    const response = await fetch(`/api/transactions/order/${orderId}`)
+    const response = await fetch(`/api/transactions/order/${encodeURIComponent(orderId)}`)
     if (!response.ok) throw new Error('Failed to get transaction')
     return response.json()
   },
 
   getUserTransactions: async (userId: string) => {
-    const response = await fetch(`/api/transactions/user/${userId}`)
+    const response = await fetch(`/api/transactions/user/${encodeURIComponent(userId)}`)
     if (!response.ok) throw new Error('Failed to get user transactions')
     return response.json()
   },
@@ -82,7 +82,7 @@ export const TransactionService = {
   },
 
   getUserSubdomainLimit: async (userId: string) => {
-    const response = await fetch(`/api/transactions/limit/${userId}`)
+    const response = await fetch(`/api/transactions/limit/${encodeURIComponent(userId)}`)
     if (!response.ok) throw new Error('Failed to get subdomain limit')
     const data = await response.json()
     return data.limit || 2
