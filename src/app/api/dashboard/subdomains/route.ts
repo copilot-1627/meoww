@@ -1,6 +1,7 @@
 import { requireAuth } from "@/lib/auth-middleware"
 import { SubdomainStorage, DomainStorage, DnsRecordStorage } from "@/lib/storage"
 import { createSubdomainRecord, deleteSubdomainRecord } from "@/lib/cloudflare"
+import { getEffectiveSubdomainLimit } from "@/lib/utils"
 import { NextRequest, NextResponse } from "next/server"
 
 export async function GET() {
@@ -53,11 +54,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    // Check subdomain limit
+    // Check subdomain limit using effective limit (base + purchased)
     const currentCount = await SubdomainStorage.countByUserId(user.id)
-    if (currentCount >= user.subdomainLimit) {
+    const effectiveLimit = await getEffectiveSubdomainLimit(user.id, user.email)
+    
+    if (currentCount >= effectiveLimit) {
       return NextResponse.json({ 
-        error: `Subdomain limit reached (${user.subdomainLimit}). Purchase additional slots to continue.` 
+        error: `Subdomain limit reached (${effectiveLimit}). Purchase additional slots to continue.` 
       }, { status: 400 })
     }
 
