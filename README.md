@@ -21,8 +21,8 @@ FreeDns is a modern, advanced Next.js application that provides free DNS managem
 - **Next.js 14**: Latest App Router with Server Components
 - **TypeScript**: Fully typed codebase for better DX
 - **Tailwind CSS**: Modern, responsive design system
-- **NextAuth.js**: Google OAuth authentication
-- **Prisma**: Type-safe database ORM
+- **NextAuth.js**: Google OAuth authentication with JWT sessions
+- **JSON Storage**: Simple file-based storage system (no database required)
 - **Framer Motion**: Smooth animations and transitions
 - **Radix UI**: Accessible component primitives
 
@@ -37,8 +37,8 @@ FreeDns is a modern, advanced Next.js application that provides free DNS managem
 - **Framework**: Next.js 14 with App Router
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
-- **Authentication**: NextAuth.js with Google Provider
-- **Database**: PostgreSQL with Prisma ORM
+- **Authentication**: NextAuth.js with Google Provider (JWT strategy)
+- **Storage**: Local JSON file storage (no database required)
 - **UI Components**: Radix UI + Custom components
 - **Animations**: Framer Motion
 - **Icons**: Lucide React
@@ -47,7 +47,6 @@ FreeDns is a modern, advanced Next.js application that provides free DNS managem
 
 ### Prerequisites
 - Node.js 18+ 
-- PostgreSQL database
 - Google OAuth credentials
 
 ### Installation
@@ -76,16 +75,10 @@ FreeDns is a modern, advanced Next.js application that provides free DNS managem
    NEXTAUTH_SECRET=your-secret-key
    GOOGLE_CLIENT_ID=your-google-client-id
    GOOGLE_CLIENT_SECRET=your-google-client-secret
-   DATABASE_URL="postgresql://username:password@localhost:5432/freedns"
+   NEXT_PUBLIC_APP_URL=http://localhost:3000
    ```
 
-4. **Database Setup**
-   ```bash
-   npx prisma generate
-   npx prisma db push
-   ```
-
-5. **Run Development Server**
+4. **Run Development Server**
    ```bash
    npm run dev
    # or
@@ -114,14 +107,33 @@ meoww/
 │   │   └── Footer.tsx       # Site footer
 │   └── lib/                 # Utilities and configs
 │       ├── auth.ts          # NextAuth configuration
-│       ├── db.ts           # Prisma client
+│       ├── storage.ts       # JSON file storage system
 │       └── utils.ts        # Utility functions
-├── prisma/
-│   └── schema.prisma       # Database schema
+├── data/                   # JSON storage directory
+│   ├── database.json       # Main data file (auto-created)
+│   └── .gitkeep           # Ensures directory exists
 ├── public/                 # Static assets
 │   └── logo.svg           # FreeDns logo
 └── package.json
 ```
+
+## 🖾 Storage System
+
+### JSON File Storage
+FreeDns uses a simple JSON file-based storage system that requires no database setup:
+
+- **Location**: `data/database.json`
+- **Structure**: Organized into users, subdomains, and DNS records
+- **Benefits**: 
+  - No database installation required
+  - Easy to backup and migrate
+  - Perfect for development and small deployments
+  - Human-readable data format
+
+### Storage Classes
+- **UserStorage**: Manage user accounts and authentication
+- **SubdomainStorage**: Handle subdomain creation and management
+- **DnsRecordStorage**: Manage DNS records (A, CNAME, SRV)
 
 ## 🎨 Design System
 
@@ -139,10 +151,10 @@ meoww/
 ## 🔐 Authentication Flow
 
 1. User clicks "Sign in with Google"
-2. NextAuth handles OAuth flow
-3. User data stored in PostgreSQL via Prisma
+2. NextAuth handles OAuth flow with JWT strategy
+3. User data stored in JSON file via storage classes
 4. Automatic redirect to dashboard
-5. Session management across app
+5. Session management with JWT tokens
 
 ## 💳 Pricing Model
 
@@ -158,11 +170,8 @@ meoww/
 - `npm run start` - Start production server
 - `npm run lint` - Run ESLint
 
-### Database Commands
-- `npx prisma studio` - Open Prisma Studio
-- `npx prisma generate` - Generate Prisma client
-- `npx prisma db push` - Push schema to database
-- `npx prisma migrate dev` - Create and apply migration
+### No Database Setup Required!
+Unlike traditional applications, FreeDns requires no database installation or configuration. The JSON storage system automatically creates the necessary files when the application starts.
 
 ## 📊 Features Roadmap
 
@@ -171,6 +180,7 @@ meoww/
 - [x] Google OAuth authentication
 - [x] FreeDns logo and branding
 - [x] Basic dashboard
+- [x] JSON file storage system
 - [x] Pricing model integration
 
 ### Part 2 (Next)
@@ -185,6 +195,21 @@ meoww/
 - [ ] Admin panel
 - [ ] Monitoring and alerting
 - [ ] Advanced DNS features
+- [ ] Database migration option
+
+## 🚀 Deployment
+
+### Vercel (Recommended)
+1. Push code to GitHub
+2. Connect repository to Vercel
+3. Add environment variables in Vercel dashboard
+4. The `data` directory will be created automatically
+5. Update Google OAuth redirect URIs
+
+### Other Platforms
+- **Netlify**: Ensure `data` directory is writable
+- **Railway**: JSON files persist between deployments
+- **DigitalOcean**: Use persistent storage for the `data` directory
 
 ## 🤝 Contributing
 
