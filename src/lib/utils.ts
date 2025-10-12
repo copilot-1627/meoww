@@ -31,7 +31,7 @@ export async function getEffectiveSubdomainLimit(userId: string, userEmail?: str
 
     const baseLimit = user.subdomainLimit || 2
 
-    // Get purchased slots from transactions.json
+    // Get purchased slots from transactions.json via API
     const identifier = userEmail || userId
     const purchasedSlots = await TransactionService.getUserSubdomainLimit(identifier)
     
@@ -57,7 +57,7 @@ export async function setEffectiveSubdomainLimit(userId: string, newTotalLimit: 
       throw new Error('User not found')
     }
 
-    // Get current purchased slots
+    // Get current purchased slots via API
     const identifier = userEmail || userId
     const currentPurchasedSlots = Math.max(0, (await TransactionService.getUserSubdomainLimit(identifier)) - 2)
     
@@ -69,7 +69,7 @@ export async function setEffectiveSubdomainLimit(userId: string, newTotalLimit: 
     
     // If admin is setting a limit lower than purchased slots, we need to handle this
     if (newTotalLimit < currentPurchasedSlots + 2) {
-      // Set transactions.json to maintain the desired total
+      // Set transactions.json to maintain the desired total via API
       await TransactionService.setUserSubdomainLimit(identifier, newTotalLimit)
     }
   } catch (error) {
