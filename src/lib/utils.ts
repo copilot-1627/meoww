@@ -1,7 +1,7 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { UserStorage } from './storage'
-import { TransactionService } from './razorpay'
+import { ServerTransactionService } from './transaction-service.server'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -20,6 +20,7 @@ export function generateSubdomain(name: string) {
 
 /**
  * Get the effective subdomain limit for a user (base limit + purchased slots)
+ * This is a server-side function that uses ServerTransactionService
  */
 export async function getEffectiveSubdomainLimit(userId: string, userEmail?: string): Promise<number> {
   try {
@@ -31,12 +32,12 @@ export async function getEffectiveSubdomainLimit(userId: string, userEmail?: str
 
     const baseLimit = user.subdomainLimit || 2
 
-    // Get purchased slots from transactions.json via API
+    // Get purchased slots from transactions.json via ServerTransactionService
     const identifier = userEmail || userId
-    const purchasedSlots = await TransactionService.getUserSubdomainLimit(identifier)
+    const purchasedSlots = await ServerTransactionService.getUserSubdomainLimit(identifier)
     
-    // If TransactionService returns a total limit, we need to extract only the purchased part
-    // Since TransactionService.getUserSubdomainLimit returns total (default 2 + purchased)
+    // If ServerTransactionService returns a total limit, we need to extract only the purchased part
+    // Since ServerTransactionService.getUserSubdomainLimit returns total (default 2 + purchased)
     // We need to subtract the default to get only purchased slots
     const additionalSlots = Math.max(0, purchasedSlots - 2)
     
@@ -49,6 +50,7 @@ export async function getEffectiveSubdomainLimit(userId: string, userEmail?: str
 
 /**
  * Update both base limit and maintain purchased slots
+ * This is a server-side function that uses ServerTransactionService
  */
 export async function setEffectiveSubdomainLimit(userId: string, newTotalLimit: number, userEmail?: string): Promise<void> {
   try {
@@ -57,9 +59,9 @@ export async function setEffectiveSubdomainLimit(userId: string, newTotalLimit: 
       throw new Error('User not found')
     }
 
-    // Get current purchased slots via API
+    // Get current purchased slots via ServerTransactionService
     const identifier = userEmail || userId
-    const currentPurchasedSlots = Math.max(0, (await TransactionService.getUserSubdomainLimit(identifier)) - 2)
+    const currentPurchasedSlots = Math.max(0, (await ServerTransactionService.getUserSubdomainLimit(identifier)) - 2)
     
     // Calculate what the new base limit should be
     const newBaseLimit = Math.max(2, newTotalLimit - currentPurchasedSlots)
@@ -69,8 +71,8 @@ export async function setEffectiveSubdomainLimit(userId: string, newTotalLimit: 
     
     // If admin is setting a limit lower than purchased slots, we need to handle this
     if (newTotalLimit < currentPurchasedSlots + 2) {
-      // Set transactions.json to maintain the desired total via API
-      await TransactionService.setUserSubdomainLimit(identifier, newTotalLimit)
+      // Set transactions.json to maintain the desired total via ServerTransactionService
+      await ServerTransactionService.setUserSubdomainLimit(identifier, newTotalLimit)
     }
   } catch (error) {
     console.error('Error setting effective subdomain limit:', error)
