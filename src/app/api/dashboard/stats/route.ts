@@ -1,5 +1,6 @@
 import { requireAuth } from "@/lib/auth-middleware"
-import { SubdomainStorage, DnsRecordStorage } from "@/lib/storage"
+import { SubdomainStorage } from "@/lib/storage"
+import { TransactionService } from "@/lib/razorpay"
 import { NextResponse } from "next/server"
 
 export async function GET() {
@@ -13,10 +14,13 @@ export async function GET() {
   try {
     const subdomainCount = await SubdomainStorage.countByUserId(user.id)
     
+    // Get user's current subdomain limit from transaction service
+    const subdomainLimit = TransactionService.getUserSubdomainLimit(user.email || user.id)
+    
     const stats = {
       subdomainCount,
-      subdomainLimit: user.subdomainLimit,
-      currentPlan: user.plan || 'FREE'
+      subdomainLimit,
+      currentPlan: subdomainLimit > 2 ? 'PREMIUM' : 'FREE'
     }
     
     return NextResponse.json(stats)
