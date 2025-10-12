@@ -1,0 +1,16 @@
+{
+  "name": "FreeDns - Powered by Flaxa Technologies",
+  "short_name": "FreeDns",
+  "description": "Free DNS management service with SRV, A, and CNAME record support",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "any",
+      "type": "image/x-icon"
+    }
+  ]
+}
