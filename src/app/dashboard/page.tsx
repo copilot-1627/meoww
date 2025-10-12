@@ -5,43 +5,169 @@ import { redirect } from "next/navigation"
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Plus, Settings, BarChart3, Globe } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Plus, Settings, Trash2, ExternalLink, Crown } from "lucide-react"
 import { formatPrice } from "@/lib/utils"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 interface DashboardStats {
   subdomainCount: number
-  recordCount: number
-  monthlyQueries: number
+  subdomainLimit: number
   currentPlan: string
+}
+
+interface Domain {
+  id: string
+  name: string
+}
+
+interface Subdomain {
+  id: string
+  name: string
+  domainName: string
+  recordType: string
+  recordValue: string
+  createdAt: string
 }
 
 export default function DashboardPage() {
   const { data: session, status } = useSession()
   const [stats, setStats] = useState<DashboardStats>({
     subdomainCount: 0,
-    recordCount: 0,
-    monthlyQueries: 0,
+    subdomainLimit: 2,
     currentPlan: 'Free'
   })
+  const [subdomains, setSubdomains] = useState<Subdomain[]>([])
+  const [domains, setDomains] = useState<Domain[]>([])
   const [loading, setLoading] = useState(true)
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
+  
+  // Form state
+  const [formData, setFormData] = useState({
+    name: '',
+    domainId: '',
+    recordType: 'A' as 'A' | 'CNAME' | 'SRV',
+    recordValue: '',
+    priority: 10,
+    weight: 10,
+    port: 80
+  })
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({})
+  const [creating, setCreating] = useState(false)
 
   useEffect(() => {
     if (session?.user?.email) {
-      fetchDashboardStats()
+      setIsAdmin(session.user.email === 'pn6009909@gmail.com')
+      fetchDashboardData()
     }
   }, [session])
 
-  const fetchDashboardStats = async () => {
+  const fetchDashboardData = async () => {
     try {
-      const response = await fetch('/api/dashboard/stats')
-      if (response.ok) {
-        const data = await response.json()
-        setStats(data)
+      const [statsRes, subdomainsRes, domainsRes] = await Promise.all([
+        fetch('/api/dashboard/stats'),
+        fetch('/api/dashboard/subdomains'),
+        fetch('/api/dashboard/domains')
+      ])
+      
+      if (statsRes.ok) {
+        const statsData = await statsRes.json()
+        setStats(statsData)
+      }
+      
+      if (subdomainsRes.ok) {
+        const subdomainsData = await subdomainsRes.json()
+        setSubdomains(subdomainsData)
+      }
+      
+      if (domainsRes.ok) {
+        const domainsData = await domainsRes.json()
+        setDomains(domainsData)
       }
     } catch (error) {
-      console.error('Error fetching dashboard stats:', error)
+      console.error('Error fetching dashboard data:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const createSubdomain = async () => {
+    // Validate form
+    const errors: Record<string, string> = {}
+    if (!formData.name) errors.name = 'Subdomain name is required'
+    if (!formData.domainId) errors.domainId = 'Please select a domain'
+    if (!formData.recordValue) errors.recordValue = 'Record value is required'
+    
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors)
+      return
+    }
+    
+    setCreating(true)
+    try {
+      const response = await fetch('/api/dashboard/subdomains', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      })
+      
+      if (response.ok) {
+        fetchDashboardData()
+        setCreateDialogOpen(false)
+        setFormData({
+          name: '',
+          domainId: '',
+          recordType: 'A',
+          recordValue: '',
+          priority: 10,
+          weight: 10,
+          port: 80
+        })
+        setFormErrors({})
+      } else {
+        const error = await response.json()
+        setFormErrors({ submit: error.error || 'Failed to create subdomain' })
+      }
+    } catch (error) {
+      setFormErrors({ submit: 'Failed to create subdomain' })
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  const deleteSubdomain = async (subdomainId: string) => {
+    if (!confirm('Are you sure you want to delete this subdomain? This action cannot be undone.')) {
+      return
+    }
+
+    try {
+      const response = await fetch('/api/dashboard/subdomains', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subdomainId })
+      })
+      
+      if (response.ok) {
+        fetchDashboardData()
+      }
+    } catch (error) {
+      console.error('Error deleting subdomain:', error)
     }
   }
 
@@ -57,30 +183,8 @@ export default function DashboardPage() {
     redirect('/')
   }
 
-  const freeSubdomainsRemaining = Math.max(0, 2 - stats.subdomainCount)
-  
-  const dashboardStats = [
-    { 
-      label: "Active Subdomains", 
-      value: stats.subdomainCount.toString(), 
-      sublabel: `${freeSubdomainsRemaining} free remaining` 
-    },
-    { 
-      label: "DNS Records", 
-      value: stats.recordCount.toString(), 
-      sublabel: "Total records" 
-    },
-    { 
-      label: "Monthly Queries", 
-      value: stats.monthlyQueries.toLocaleString(), 
-      sublabel: "This month" 
-    },
-    { 
-      label: "Current Plan", 
-      value: stats.currentPlan, 
-      sublabel: stats.currentPlan === 'Free' ? 'Starter plan' : 'Upgrade available' 
-    },
-  ]
+  const freeSubdomainsRemaining = Math.max(0, stats.subdomainLimit - stats.subdomainCount)
+  const canCreateSubdomain = stats.subdomainCount < stats.subdomainLimit
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -94,6 +198,14 @@ export default function DashboardPage() {
             </div>
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-600">Welcome, {session.user?.name}</span>
+              {isAdmin && (
+                <Button variant="gradient" size="sm" asChild>
+                  <a href="/admin" className="flex items-center">
+                    <Crown className="w-4 h-4 mr-2" />
+                    Admin Panel
+                  </a>
+                </Button>
+              )}
               <Button variant="outline" size="sm">
                 <Settings className="w-4 h-4 mr-2" />
                 Settings
@@ -104,93 +216,239 @@ export default function DashboardPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {dashboardStats.map((stat) => (
-            <Card key={stat.label}>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-gray-600">{stat.label}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
-                <p className="text-sm text-gray-600">{stat.sublabel}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Quick Actions */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Create New Subdomain */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Plus className="w-5 h-5 mr-2" />
-                Create New Subdomain
-              </CardTitle>
-              <CardDescription>
-                {freeSubdomainsRemaining > 0 
-                  ? `You have ${freeSubdomainsRemaining} free subdomain slot${freeSubdomainsRemaining === 1 ? '' : 's'} available.`
-                  : `Additional slots cost ${formatPrice(8)} each.`
-                }
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button 
-                className="w-full" 
-                variant="gradient"
-                onClick={() => {
-                  // TODO: Implement subdomain creation in Part 2
-                  alert('Subdomain creation will be implemented in Part 2!')
-                }}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Subdomain
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* DNS Analytics */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <BarChart3 className="w-5 h-5 mr-2" />
-                DNS Analytics
-              </CardTitle>
-              <CardDescription>
-                Monitor your DNS performance and query statistics.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button 
-                className="w-full" 
-                variant="outline"
-                onClick={() => {
-                  // TODO: Implement analytics in Part 2
-                  alert('Analytics dashboard will be implemented in Part 2!')
-                }}
-              >
-                <BarChart3 className="w-4 h-4 mr-2" />
-                View Analytics
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Recent Activity */}
-        <Card className="mt-8">
+        {/* Stats Card */}
+        <Card className="mb-8">
           <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
+            <CardTitle className="flex items-center justify-between">
+              <span>Subdomain Usage</span>
+              <span className="text-lg font-bold text-flaxa-blue-600">
+                {stats.subdomainCount}/{stats.subdomainLimit}
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className="bg-flaxa-blue-600 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${(stats.subdomainCount / stats.subdomainLimit) * 100}%` }}
+              />
+            </div>
+            <div className="flex items-center justify-between mt-2 text-sm text-gray-600">
+              <span>
+                {freeSubdomainsRemaining > 0 
+                  ? `${freeSubdomainsRemaining} free subdomain${freeSubdomainsRemaining === 1 ? '' : 's'} remaining`
+                  : 'No free subdomains remaining'
+                }
+              </span>
+              <span>
+                {!canCreateSubdomain && `Additional slots: ${formatPrice(8)} each`}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Create Subdomain */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span>Your Subdomains</span>
+              <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button 
+                    variant="gradient"
+                    disabled={!canCreateSubdomain || domains.length === 0}
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Subdomain
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Create New Subdomain</DialogTitle>
+                    <DialogDescription>
+                      Create a new subdomain with DNS record configuration.
+                    </DialogDescription>
+                  </DialogHeader>
+                  
+                  <div className="space-y-4 py-4">
+                    <div>
+                      <Label htmlFor="subdomainName">Subdomain Name</Label>
+                      <Input
+                        id="subdomainName"
+                        placeholder="myapp"
+                        value={formData.name}
+                        onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                        className={formErrors.name ? 'border-red-500' : ''}
+                      />
+                      {formErrors.name && (
+                        <p className="text-red-500 text-sm mt-1">{formErrors.name}</p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="domain">Domain</Label>
+                      <Select 
+                        value={formData.domainId} 
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, domainId: value }))}
+                      >
+                        <SelectTrigger className={formErrors.domainId ? 'border-red-500' : ''}>
+                          <SelectValue placeholder="Select a domain" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {domains.map((domain) => (
+                            <SelectItem key={domain.id} value={domain.id}>
+                              {domain.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {formErrors.domainId && (
+                        <p className="text-red-500 text-sm mt-1">{formErrors.domainId}</p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="recordType">Record Type</Label>
+                      <Select 
+                        value={formData.recordType} 
+                        onValueChange={(value: 'A' | 'CNAME' | 'SRV') => setFormData(prev => ({ ...prev, recordType: value }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="A">A Record</SelectItem>
+                          <SelectItem value="CNAME">CNAME Record</SelectItem>
+                          <SelectItem value="SRV">SRV Record</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="recordValue">
+                        {formData.recordType === 'A' ? 'IP Address' : 
+                         formData.recordType === 'CNAME' ? 'Target Domain' : 'Target'}
+                      </Label>
+                      <Input
+                        id="recordValue"
+                        placeholder={
+                          formData.recordType === 'A' ? '192.168.1.1' :
+                          formData.recordType === 'CNAME' ? 'example.com' : 'target.example.com'
+                        }
+                        value={formData.recordValue}
+                        onChange={(e) => setFormData(prev => ({ ...prev, recordValue: e.target.value }))}
+                        className={formErrors.recordValue ? 'border-red-500' : ''}
+                      />
+                      {formErrors.recordValue && (
+                        <p className="text-red-500 text-sm mt-1">{formErrors.recordValue}</p>
+                      )}
+                    </div>
+                    
+                    {formData.recordType === 'SRV' && (
+                      <div className="grid grid-cols-3 gap-2">
+                        <div>
+                          <Label htmlFor="priority">Priority</Label>
+                          <Input
+                            id="priority"
+                            type="number"
+                            value={formData.priority}
+                            onChange={(e) => setFormData(prev => ({ ...prev, priority: parseInt(e.target.value) || 10 }))}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="weight">Weight</Label>
+                          <Input
+                            id="weight"
+                            type="number"
+                            value={formData.weight}
+                            onChange={(e) => setFormData(prev => ({ ...prev, weight: parseInt(e.target.value) || 10 }))}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="port">Port</Label>
+                          <Input
+                            id="port"
+                            type="number"
+                            value={formData.port}
+                            onChange={(e) => setFormData(prev => ({ ...prev, port: parseInt(e.target.value) || 80 }))}
+                          />
+                        </div>
+                      </div>
+                    )}
+                    
+                    {formErrors.submit && (
+                      <p className="text-red-500 text-sm">{formErrors.submit}</p>
+                    )}
+                  </div>
+                  
+                  <div className="flex justify-end space-x-2">
+                    <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button onClick={createSubdomain} disabled={creating}>
+                      {creating ? 'Creating...' : 'Create Subdomain'}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </CardTitle>
             <CardDescription>
-              Your latest DNS management activities.
+              {domains.length === 0 ? (
+                "No domains available. Contact admin to add domains."
+              ) : (
+                `Manage your subdomains across ${domains.length} available domain${domains.length === 1 ? '' : 's'}.`
+              )}
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="text-center py-12 text-gray-500">
-              <Globe className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-              <p>No recent activity</p>
-              <p className="text-sm">Start by creating your first subdomain!</p>
-            </div>
+            {subdomains.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <Plus className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                <p>No subdomains created yet</p>
+                <p className="text-sm">Create your first subdomain to get started!</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {subdomains.map((subdomain) => (
+                  <div
+                    key={subdomain.id}
+                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <div>
+                      <div className="flex items-center space-x-2">
+                        <h3 className="font-medium text-gray-900">
+                          {subdomain.name}.{subdomain.domainName}
+                        </h3>
+                        <Button variant="ghost" size="sm" asChild>
+                          <a 
+                            href={`https://${subdomain.name}.${subdomain.domainName}`} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        </Button>
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        {subdomain.recordType} → {subdomain.recordValue}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Created {new Date(subdomain.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => deleteSubdomain(subdomain.id)}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </main>
