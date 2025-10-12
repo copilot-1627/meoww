@@ -8,15 +8,29 @@ export interface User {
   name: string
   image?: string
   plan: 'FREE' | 'PRO' | 'ENTERPRISE'
+  subdomainLimit: number
+  isAdmin: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface Domain {
+  id: string
+  name: string // e.g., "example.com"
+  cloudflareZoneId: string
+  cloudflareApiKey: string
+  active: boolean
   createdAt: string
   updatedAt: string
 }
 
 export interface Subdomain {
   id: string
-  name: string
+  name: string // e.g., "myapp" for myapp.example.com
+  domainId: string
   userId: string
   active: boolean
+  cloudflareRecordId?: string
   createdAt: string
   updatedAt: string
 }
@@ -32,18 +46,23 @@ export interface DnsRecord {
   port?: number
   subdomainId: string
   userId: string
+  cloudflareRecordId?: string
   createdAt: string
   updatedAt: string
 }
 
 interface DatabaseSchema {
   users: User[]
+  domains: Domain[]
   subdomains: Subdomain[]
   dnsRecords: DnsRecord[]
 }
 
 const DATA_DIR = path.join(process.cwd(), 'data')
 const DATA_FILE = path.join(DATA_DIR, 'database.json')
+
+// Admin email
+const ADMIN_EMAIL = 'pn6009909@gmail.com'
 
 // Ensure data directory exists
 async function ensureDataDir() {
@@ -64,6 +83,7 @@ async function initializeDatabase(): Promise<DatabaseSchema> {
   } catch {
     const initialData: DatabaseSchema = {
       users: [],
+      domains: [],
       subdomains: [],
       dnsRecords: []
     }
@@ -93,6 +113,11 @@ function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 }
 
+// Check if user is admin
+export function isAdminEmail(email: string): boolean {
+  return email === ADMIN_EMAIL
+}
+
 // User operations
 export class UserStorage {
   static async findByEmail(email: string): Promise<User | null> {
@@ -105,6 +130,11 @@ export class UserStorage {
     return db.users.find(user => user.id === id) || null
   }
 
+  static async findAll(): Promise<User[]> {
+    const db = await readDatabase()
+    return db.users
+  }
+
   static async create(userData: Omit<User, 'id' | 'createdAt' | 'updatedAt'>): Promise<User> {
     const db = await readDatabase()
     
@@ -112,6 +142,8 @@ export class UserStorage {
       id: generateId(),
       ...userData,
       plan: userData.plan || 'FREE',
+      subdomainLimit: userData.subdomainLimit || 2,
+      isAdmin: isAdminEmail(userData.email),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     }
@@ -153,6 +185,80 @@ export class UserStorage {
   }
 }
 
+// Domain operations
+export class DomainStorage {
+  static async findAll(): Promise<Domain[]> {
+    const db = await readDatabase()
+    return db.domains.filter(domain => domain.active)
+  }
+
+  static async findById(id: string): Promise<Domain | null> {
+    const db = await readDatabase()
+    return db.domains.find(domain => domain.id === id) || null
+  }
+
+  static async findByName(name: string): Promise<Domain | null> {
+    const db = await readDatabase()
+    return db.domains.find(domain => domain.name === name) || null
+  }
+
+  static async create(domainData: Omit<Domain, 'id' | 'createdAt' | 'updatedAt'>): Promise<Domain> {
+    const db = await readDatabase()
+    
+    // Check if domain name already exists
+    const existing = await this.findByName(domainData.name)
+    if (existing) {
+      throw new Error('Domain name already exists')
+    }
+    
+    const domain: Domain = {
+      id: generateId(),
+      ...domainData,
+      active: domainData.active ?? true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+    
+    db.domains.push(domain)
+    await writeDatabase(db)
+    return domain
+  }
+
+  static async update(id: string, updates: Partial<Omit<Domain, 'id' | 'createdAt'>>): Promise<Domain | null> {
+    const db = await readDatabase()
+    const domainIndex = db.domains.findIndex(domain => domain.id === id)
+    
+    if (domainIndex === -1) return null
+    
+    db.domains[domainIndex] = {
+      ...db.domains[domainIndex],
+      ...updates,
+      updatedAt: new Date().toISOString()
+    }
+    
+    await writeDatabase(db)
+    return db.domains[domainIndex]
+  }
+
+  static async delete(id: string): Promise<boolean> {
+    const db = await readDatabase()
+    const domainIndex = db.domains.findIndex(domain => domain.id === id)
+    
+    if (domainIndex === -1) return false
+    
+    db.domains.splice(domainIndex, 1)
+    // Also delete related subdomains and DNS records
+    const subdomainsToDelete = db.subdomains.filter(subdomain => subdomain.domainId === id)
+    const subdomainIds = subdomainsToDelete.map(s => s.id)
+    
+    db.subdomains = db.subdomains.filter(subdomain => subdomain.domainId !== id)
+    db.dnsRecords = db.dnsRecords.filter(record => !subdomainIds.includes(record.subdomainId))
+    
+    await writeDatabase(db)
+    return true
+  }
+}
+
 // Subdomain operations
 export class SubdomainStorage {
   static async findByUserId(userId: string): Promise<Subdomain[]> {
@@ -165,18 +271,23 @@ export class SubdomainStorage {
     return db.subdomains.find(subdomain => subdomain.id === id) || null
   }
 
-  static async findByName(name: string): Promise<Subdomain | null> {
+  static async findByNameAndDomain(name: string, domainId: string): Promise<Subdomain | null> {
     const db = await readDatabase()
-    return db.subdomains.find(subdomain => subdomain.name === name) || null
+    return db.subdomains.find(subdomain => subdomain.name === name && subdomain.domainId === domainId) || null
+  }
+
+  static async findAll(): Promise<Subdomain[]> {
+    const db = await readDatabase()
+    return db.subdomains
   }
 
   static async create(subdomainData: Omit<Subdomain, 'id' | 'createdAt' | 'updatedAt'>): Promise<Subdomain> {
     const db = await readDatabase()
     
-    // Check if subdomain name already exists
-    const existing = await this.findByName(subdomainData.name)
+    // Check if subdomain name already exists for this domain
+    const existing = await this.findByNameAndDomain(subdomainData.name, subdomainData.domainId)
     if (existing) {
-      throw new Error('Subdomain name already exists')
+      throw new Error('Subdomain already exists for this domain')
     }
     
     const subdomain: Subdomain = {
