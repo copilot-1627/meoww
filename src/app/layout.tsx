@@ -2,11 +2,11 @@ import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 import { Providers } from '@/components/Providers'
-import { NextSeo } from 'next-seo'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
   title: 'FreeDns - Free DNS Management Made Simple | Powered by Flaxa Technologies',
   description: 'Manage your DNS records with ease. Get 2 free subdomains and support for SRV, A, and CNAME records. Additional subdomain slots available for ₹8 each.',
   keywords: 'DNS, DNS management, free DNS, subdomain, SRV records, A records, CNAME records, DNS hosting, domain management',
@@ -17,13 +17,13 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://freedns.flaxa.tech',
+    url: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
     title: 'FreeDns - Free DNS Management Made Simple',
     description: 'Manage your DNS records with ease. Get 2 free subdomains and support for SRV, A, and CNAME records.',
     siteName: 'FreeDns',
     images: [
       {
-        url: '/og-image.jpg',
+        url: '/logo.svg',
         width: 1200,
         height: 630,
         alt: 'FreeDns - Free DNS Management',
@@ -34,14 +34,11 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'FreeDns - Free DNS Management Made Simple',
     description: 'Manage your DNS records with ease. Get 2 free subdomains and support for SRV, A, and CNAME records.',
-    images: ['/og-image.jpg'],
+    images: ['/logo.svg'],
     creator: '@FlaxaTech',
   },
-  verification: {
-    google: 'your-google-site-verification',
-  },
   alternates: {
-    canonical: 'https://freedns.flaxa.tech',
+    canonical: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
   },
 }
 
