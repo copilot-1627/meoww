@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import crypto from 'crypto'
-import { ServerTransactionService } from '@/lib/transaction-service.server'
+import { ServerTransactionService } from '@/lib/transaction-service-mongodb'
 
 export async function POST(request: NextRequest) {
   try {
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Payment configuration error' }, { status: 500 })
     }
 
-    // Find the transaction first using ServerTransactionService
+    // Find the transaction first using MongoDB ServerTransactionService
     const transaction = await ServerTransactionService.getTransactionByOrderId(razorpay_order_id)
     if (!transaction) {
       console.error('Transaction not found for order ID:', razorpay_order_id)
@@ -54,13 +54,13 @@ export async function POST(request: NextRequest) {
     })
 
     if (expectedSignature !== razorpay_signature) {
-      // Update transaction as failed using ServerTransactionService
+      // Update transaction as failed using MongoDB ServerTransactionService
       await ServerTransactionService.updateTransactionStatus(razorpay_order_id, 'failed')
       console.error('Payment signature verification failed')
       return NextResponse.json({ error: 'Payment verification failed' }, { status: 400 })
     }
 
-    // Update transaction as paid and add subdomain slots using ServerTransactionService
+    // Update transaction as paid and add subdomain slots using MongoDB ServerTransactionService
     const updatedTransaction = await ServerTransactionService.updateTransactionStatus(
       razorpay_order_id, 
       'paid', 
