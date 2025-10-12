@@ -1,53 +1,49 @@
-# FreeDns - Advanced Next.js DNS Management Platform
+# FreeDNS - Advanced DNS Management Platform
 
-![FreeDns Logo](./public/logo.svg)
+## 🌟 Professional DNS Services by Flaxa Technologies
 
-**Powered by Flaxa Technologies**
+FreeDNS is a comprehensive subdomain management platform that provides free DNS services with premium features. Built with Next.js 14, TypeScript, and modern web technologies, it offers both free and paid subdomain management with advanced DNS record support.
 
-## 🚀 Overview
-
-FreeDns is a modern, advanced Next.js application that provides free DNS management services. Users get 2 free subdomain slots and can purchase additional slots for ₹8 each. The platform supports SRV, A, and CNAME record types with enterprise-grade features.
+![FreeDNS Dashboard](https://img.shields.io/badge/FreeDNS-Professional%20DNS%20Services-blue?style=for-the-badge&logo=cloudflare)
 
 ## ✨ Features
 
-### Core DNS Features
-- **Multiple Record Types**: Support for SRV, A, and CNAME records
-- **Free Tier**: 2 free subdomain slots for every user
-- **Scalable Pricing**: Additional subdomains at ₹8 per slot
-- **Real-time Propagation**: DNS changes propagate globally in under 60 seconds
-- **Enterprise Security**: DDoS protection and DNSSEC support
+### Core DNS Services
+- 🆓 **Free Subdomain Management** - 2 free subdomain slots for all users
+- 📈 **Scalable Premium Plans** - Purchase additional slots at ₹8 per subdomain
+- 🌐 **Multiple DNS Record Types** - Support for A, CNAME, and SRV records
+- ⚡ **Real-time DNS Updates** - Instant propagation of DNS changes
+- 🔒 **Secure Authentication** - Google OAuth integration with NextAuth.js
 
-### Technical Features
-- **Next.js 14**: Latest App Router with Server Components
-- **TypeScript**: Fully typed codebase for better DX
-- **Tailwind CSS**: Modern, responsive design system
-- **NextAuth.js**: Google OAuth authentication with JWT sessions
-- **JSON Storage**: Simple file-based storage system (no database required)
-- **Framer Motion**: Smooth animations and transitions
-- **Radix UI**: Accessible component primitives
+### Payment Integration
+- 💳 **Razorpay Integration** - Secure payment processing for Indian users
+- 🛒 **Flexible Purchasing** - Buy 1-50 additional subdomain slots at once
+- 📊 **Transaction History** - Complete payment and purchase tracking
+- 🔄 **Instant Activation** - Immediate slot allocation upon payment confirmation
+- 📧 **Payment Notifications** - Real-time payment status updates
+
+### Administrative Features
+- 👑 **Admin Dashboard** - Comprehensive platform management interface
+- 📈 **Transaction Analytics** - Revenue tracking and payment analytics
+- 🗂️ **Subdomain Management** - View, filter, and manage all user subdomains
+- 👥 **User Management** - Monitor user activity and account status
+- 📊 **Domain Analytics** - Track domain usage and popular record types
+- 🗑️ **Bulk Operations** - Efficient management tools for administrators
 
 ### SEO & Performance
-- **Complete SEO**: Meta tags, OpenGraph, Twitter Cards
-- **Performance Optimized**: Image optimization, lazy loading
-- **Mobile First**: Responsive design for all devices
-- **PWA Ready**: Manifest and service worker support
-
-## 🛠️ Tech Stack
-
-- **Framework**: Next.js 14 with App Router
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **Authentication**: NextAuth.js with Google Provider (JWT strategy)
-- **Storage**: Local JSON file storage (no database required)
-- **UI Components**: Radix UI + Custom components
-- **Animations**: Framer Motion
-- **Icons**: Lucide React
+- 🔍 **Complete SEO Optimization** - Meta tags, structured data, and sitemap
+- 📱 **Progressive Web App** - Mobile-first design with offline capabilities
+- 🎨 **Professional Favicon Suite** - Complete icon package for all platforms
+- ⚡ **Performance Optimized** - Fast loading times and responsive design
+- 📈 **Analytics Ready** - Google Analytics and Search Console integration
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+ 
+- Node.js 18.0 or later
+- npm or yarn package manager
 - Google OAuth credentials
+- Razorpay account (for payment features)
 
 ### Installation
 
@@ -64,173 +60,228 @@ FreeDns is a modern, advanced Next.js application that provides free DNS managem
    yarn install
    ```
 
-3. **Environment Setup**
+3. **Environment Configuration**
    ```bash
-   cp .env.example .env
+   cp .env.example .env.local
    ```
-   
-   Fill in your environment variables:
+
+   Configure the following environment variables:
    ```env
+   # NextAuth.js Configuration
    NEXTAUTH_URL=http://localhost:3000
-   NEXTAUTH_SECRET=your-secret-key
+   NEXTAUTH_SECRET=your-nextauth-secret
+
+   # Google OAuth
    GOOGLE_CLIENT_ID=your-google-client-id
    GOOGLE_CLIENT_SECRET=your-google-client-secret
+
+   # Razorpay Payment Gateway
+   RAZORPAY_KEY_ID=rzp_test_your_key_id
+   RAZORPAY_KEY_SECRET=your_razorpay_key_secret
+   NEXT_PUBLIC_RAZORPAY_KEY_ID=rzp_test_your_key_id
+
+   # App Configuration
    NEXT_PUBLIC_APP_URL=http://localhost:3000
    ```
 
-4. **Run Development Server**
+4. **Start the development server**
    ```bash
    npm run dev
    # or
    yarn dev
    ```
 
+5. **Access the application**
    Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## 📁 Project Structure
+## 💳 Payment Integration Setup
 
+### Razorpay Configuration
+
+1. **Create Razorpay Account**
+   - Sign up at [Razorpay Dashboard](https://dashboard.razorpay.com/)
+   - Complete KYC verification for live payments
+
+2. **Generate API Keys**
+   - Navigate to Settings → API Keys
+   - Generate Test/Live Key ID and Key Secret
+   - Add keys to your environment variables
+
+3. **Webhook Configuration** (Optional)
+   - Set webhook URL: `https://yourdomain.com/api/payment/webhook`
+   - Select events: `payment.captured`, `payment.failed`
+
+### Payment Features
+- **Pricing**: ₹8 INR per additional subdomain slot
+- **Payment Methods**: Cards, UPI, Net Banking, Wallets
+- **Currency**: Indian Rupee (INR)
+- **Security**: PCI DSS compliant payment processing
+
+## 👑 Admin Panel Access
+
+The admin panel is restricted to authorized administrators:
+
+1. **Admin User**: `pn6009909@gmail.com` (configurable in code)
+2. **Access URL**: `/admin`
+3. **Features**:
+   - Transaction monitoring and analytics
+   - User subdomain management
+   - Domain usage statistics
+   - Revenue tracking
+   - Bulk operations
+
+### Admin Routes
+- `/admin` - Overview dashboard
+- `/admin/users` - User management
+- `/admin/domains` - Domain configuration
+- `/admin/transactions` - Payment analytics
+- `/admin/subdomains` - Subdomain management
+
+## 🏗️ Architecture
+
+### Technology Stack
+- **Frontend**: Next.js 14, React 18, TypeScript
+- **Styling**: Tailwind CSS, Radix UI Components
+- **Authentication**: NextAuth.js with Google OAuth
+- **Payments**: Razorpay Integration
+- **Database**: File-based storage (easily replaceable)
+- **Deployment**: Vercel-ready configuration
+
+### Project Structure
 ```
-meoww/
-├── src/
-│   ├── app/                    # Next.js App Router
-│   │   ├── api/               # API routes
-│   │   ├── dashboard/         # Dashboard pages
-│   │   ├── layout.tsx         # Root layout
-│   │   ├── page.tsx          # Homepage
-│   │   └── globals.css       # Global styles
-│   ├── components/           # React components
-│   │   ├── ui/              # Reusable UI components
-│   │   ├── Header.tsx       # Navigation header
-│   │   ├── Hero.tsx         # Landing page hero
-│   │   ├── Features.tsx     # Features section
-│   │   ├── Pricing.tsx      # Pricing section
-│   │   └── Footer.tsx       # Site footer
-│   └── lib/                 # Utilities and configs
-│       ├── auth.ts          # NextAuth configuration
-│       ├── storage.ts       # JSON file storage system
-│       └── utils.ts        # Utility functions
-├── data/                   # JSON storage directory
-│   ├── database.json       # Main data file (auto-created)
-│   └── .gitkeep           # Ensures directory exists
-├── public/                 # Static assets
-│   └── logo.svg           # FreeDns logo
-└── package.json
+src/
+├── app/                    # App Router (Next.js 14)
+│   ├── admin/             # Admin panel pages
+│   ├── api/               # API routes
+│   │   ├── auth/         # Authentication
+│   │   ├── dashboard/    # User dashboard APIs
+│   │   ├── payment/      # Payment processing
+│   │   └── transactions/ # Transaction management
+│   └── dashboard/        # User dashboard
+├── components/           # Reusable UI components
+│   └── ui/              # Base UI components
+└── lib/                 # Utilities and configurations
+    ├── razorpay.ts      # Payment integration
+    └── utils.ts         # Helper functions
 ```
 
-## 🖾 Storage System
+## 🔧 Configuration
 
-### JSON File Storage
-FreeDns uses a simple JSON file-based storage system that requires no database setup:
+### DNS Record Types
 
-- **Location**: `data/database.json`
-- **Structure**: Organized into users, subdomains, and DNS records
-- **Benefits**: 
-  - No database installation required
-  - Easy to backup and migrate
-  - Perfect for development and small deployments
-  - Human-readable data format
+**A Records**
+- Purpose: Point subdomain to IPv4 address
+- Format: `192.168.1.1`
+- Use Case: Direct IP mapping
 
-### Storage Classes
-- **UserStorage**: Manage user accounts and authentication
-- **SubdomainStorage**: Handle subdomain creation and management
-- **DnsRecordStorage**: Manage DNS records (A, CNAME, SRV)
+**CNAME Records**
+- Purpose: Alias to another domain
+- Format: `target.example.com`
+- Use Case: CDN integration, redirects
 
-## 🎨 Design System
+**SRV Records**
+- Purpose: Service discovery
+- Format: `priority weight port target`
+- Use Case: Mail servers, gaming servers
 
-### Color Palette
-- **Primary**: Flaxa Blue (#3b82f6 to #1d4ed8)
-- **Secondary**: Gray scale for text and backgrounds
-- **Accent**: Green for success states
-
-### Components
-- **Buttons**: Multiple variants (default, gradient, outline, ghost)
-- **Cards**: Structured content containers
-- **Forms**: Accessible form inputs and validation
-- **Navigation**: Responsive header with mobile menu
-
-## 🔐 Authentication Flow
-
-1. User clicks "Sign in with Google"
-2. NextAuth handles OAuth flow with JWT strategy
-3. User data stored in JSON file via storage classes
-4. Automatic redirect to dashboard
-5. Session management with JWT tokens
-
-## 💳 Pricing Model
-
+### Subdomain Limits
 - **Free Tier**: 2 subdomain slots
-- **Pro Tier**: ₹8 per additional subdomain slot
-- **Enterprise**: Custom pricing for organizations
-
-## 🔧 Development
-
-### Available Scripts
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run start` - Start production server
-- `npm run lint` - Run ESLint
-
-### No Database Setup Required!
-Unlike traditional applications, FreeDns requires no database installation or configuration. The JSON storage system automatically creates the necessary files when the application starts.
-
-## 📊 Features Roadmap
-
-### Part 1 ✅ (Current)
-- [x] Landing page with SEO
-- [x] Google OAuth authentication
-- [x] FreeDns logo and branding
-- [x] Basic dashboard
-- [x] JSON file storage system
-- [x] Pricing model integration
-
-### Part 2 (Next)
-- [ ] Full dashboard functionality
-- [ ] DNS record management
-- [ ] Subdomain creation/deletion
-- [ ] Payment integration
-- [ ] Analytics dashboard
-
-### Future Parts
-- [ ] API documentation
-- [ ] Admin panel
-- [ ] Monitoring and alerting
-- [ ] Advanced DNS features
-- [ ] Database migration option
+- **Premium**: Unlimited via ₹8/slot purchase
+- **Admin Override**: Configurable limits
 
 ## 🚀 Deployment
 
-### Vercel (Recommended)
-1. Push code to GitHub
-2. Connect repository to Vercel
-3. Add environment variables in Vercel dashboard
-4. The `data` directory will be created automatically
-5. Update Google OAuth redirect URIs
+### Vercel Deployment (Recommended)
 
-### Other Platforms
-- **Netlify**: Ensure `data` directory is writable
-- **Railway**: JSON files persist between deployments
-- **DigitalOcean**: Use persistent storage for the `data` directory
+1. **Connect Repository**
+   - Import project to Vercel
+   - Configure environment variables
+   - Deploy automatically
+
+2. **Environment Variables**
+   ```bash
+   # Production URLs
+   NEXTAUTH_URL=https://yourdomain.com
+   NEXT_PUBLIC_APP_URL=https://yourdomain.com
+   
+   # Use production Razorpay keys
+   RAZORPAY_KEY_ID=rzp_live_your_key_id
+   RAZORPAY_KEY_SECRET=your_live_key_secret
+   NEXT_PUBLIC_RAZORPAY_KEY_ID=rzp_live_your_key_id
+   ```
+
+### Alternative Deployment
+
+**Docker Deployment**
+```bash
+# Build production image
+npm run build
+docker build -t freedns .
+docker run -p 3000:3000 freedns
+```
+
+**Manual Deployment**
+```bash
+npm run build
+npm start
+```
+
+## 🔒 Security Features
+
+- **Authentication**: Secure Google OAuth integration
+- **Payment Security**: PCI DSS compliant Razorpay integration
+- **Admin Protection**: Role-based access control
+- **Data Validation**: Input sanitization and validation
+- **CORS Configuration**: Secure cross-origin requests
+- **Rate Limiting**: API abuse prevention
+
+## 📊 Monitoring & Analytics
+
+### Built-in Analytics
+- Transaction success rates
+- Revenue tracking
+- User engagement metrics
+- Subdomain usage patterns
+- Payment method preferences
+
+### Integration Ready
+- Google Analytics 4
+- Google Search Console
+- Hotjar/LogRocket
+- Sentry error tracking
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+2. Create feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'Add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open Pull Request
 
 ## 📄 License
 
-This project is private and proprietary to Flaxa Technologies.
+This project is proprietary software owned by Flaxa Technologies. All rights reserved.
 
-## 🙋‍♂️ Support
+## 🆘 Support
 
-For support, email support@flaxa.tech or join our community Discord.
+- **Documentation**: [Setup Guide](SETUP.md)
+- **Issues**: GitHub Issues
+- **Email**: support@flaxa.tech
+- **Website**: [flaxa.tech](https://flaxa.tech)
+
+## 🎯 Roadmap
+
+### Upcoming Features
+- [ ] Custom domain integration
+- [ ] API access for developers
+- [ ] Bulk subdomain operations
+- [ ] Advanced DNS analytics
+- [ ] Multi-currency payment support
+- [ ] Subscription-based pricing
+- [ ] White-label solutions
 
 ---
 
-**Made with ❤️ by Flaxa Technologies**
+**Built with ❤️ by [Flaxa Technologies](https://flaxa.tech)**
 
-🔗 **Live Demo**: [https://freedns.flaxa.tech](https://freedns.flaxa.tech)
-📧 **Contact**: support@flaxa.tech
-🐦 **Twitter**: [@FlaxaTech](https://twitter.com/FlaxaTech)
+*Empowering developers and businesses with professional DNS management solutions.*
