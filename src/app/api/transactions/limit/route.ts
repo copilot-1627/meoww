@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { ServerTransactionService } from '@/lib/transaction-service.server'
+import { ServerTransactionService } from '@/lib/transaction-service-mongodb'
 
 export async function POST(request: NextRequest) {
   try {
