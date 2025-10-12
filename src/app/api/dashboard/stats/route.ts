@@ -1,6 +1,6 @@
 import { requireAuth } from "@/lib/auth-middleware"
-import { SubdomainStorage } from "@/lib/storage"
-import { ServerTransactionService } from "@/lib/transaction-service.server"
+import { SubdomainStorage } from "@/lib/storage-mongodb"
+import { ServerTransactionService } from "@/lib/transaction-service-mongodb"
 import { NextResponse } from "next/server"
 
 export async function GET() {
@@ -14,7 +14,7 @@ export async function GET() {
   try {
     const subdomainCount = await SubdomainStorage.countByUserId(user.id)
     
-    // Get user's current subdomain limit from server transaction service
+    // Get user's current subdomain limit from MongoDB transaction service
     const subdomainLimit = await ServerTransactionService.getUserSubdomainLimit(user.email || user.id)
     
     console.log(`User ${user.email} stats:`, {
