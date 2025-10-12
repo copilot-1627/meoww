@@ -14,8 +14,14 @@ export async function GET() {
   try {
     const subdomainCount = await SubdomainStorage.countByUserId(user.id)
     
-    // Get user's current subdomain limit from transaction service
-    const subdomainLimit = TransactionService.getUserSubdomainLimit(user.email || user.id)
+    // Get user's current subdomain limit from transaction service (async)
+    const subdomainLimit = await TransactionService.getUserSubdomainLimit(user.email || user.id)
+    
+    console.log(`User ${user.email} stats:`, {
+      subdomainCount,
+      subdomainLimit,
+      userId: user.id
+    })
     
     const stats = {
       subdomainCount,
@@ -26,6 +32,9 @@ export async function GET() {
     return NextResponse.json(stats)
   } catch (error) {
     console.error('Error fetching dashboard stats:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
   }
 }

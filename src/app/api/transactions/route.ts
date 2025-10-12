@@ -21,15 +21,20 @@ export async function GET(request: NextRequest) {
     let transactions
     if (isAdmin) {
       // Admin gets all transactions
-      transactions = TransactionService.getAllTransactions()
+      transactions = await TransactionService.getAllTransactions()
+      console.log(`Admin ${userEmail} fetched ${transactions.length} transactions`)
     } else {
       // User gets only their transactions
-      transactions = TransactionService.getUserTransactions(userEmail)
+      transactions = await TransactionService.getUserTransactions(userEmail)
+      console.log(`User ${userEmail} fetched ${transactions.length} transactions`)
     }
 
     return NextResponse.json(transactions)
   } catch (error) {
     console.error('Error fetching transactions:', error)
-    return NextResponse.json({ error: 'Failed to fetch transactions' }, { status: 500 })
+    return NextResponse.json({ 
+      error: 'Failed to fetch transactions',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
   }
 }
