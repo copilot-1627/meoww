@@ -28,8 +28,8 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Create transaction record
-    const transaction = TransactionService.createTransaction({
+    // Create transaction record with async service
+    const transaction = await TransactionService.createTransaction({
       userId: session.user.email || '',
       userEmail: session.user.email || '',
       userName: session.user.name || '',
@@ -40,6 +40,8 @@ export async function POST(request: NextRequest) {
       subdomainSlots,
       status: 'created',
     })
+
+    console.log('Order created:', order.id, 'Transaction created:', transaction.id)
 
     return NextResponse.json({
       orderId: order.id,
