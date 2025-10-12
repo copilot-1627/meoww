@@ -1,6 +1,6 @@
 import { NextAuthOptions } from "next-auth"
 import GoogleProvider from "next-auth/providers/google"
-import { UserStorage, type User } from "./storage"
+import { UserStorage, type User, isAdminEmail } from "./storage"
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -22,13 +22,16 @@ export const authOptions: NextAuthOptions = {
               email: user.email,
               name: user.name || '',
               image: user.image,
-              plan: 'FREE'
+              plan: 'FREE',
+              subdomainLimit: 2,
+              isAdmin: isAdminEmail(user.email)
             })
           } else {
             // Update existing user's info
             await UserStorage.update(existingUser.id, {
               name: user.name || existingUser.name,
-              image: user.image || existingUser.image
+              image: user.image || existingUser.image,
+              isAdmin: isAdminEmail(user.email)
             })
           }
           
@@ -50,7 +53,9 @@ export const authOptions: NextAuthOptions = {
               user: {
                 ...session.user,
                 id: user.id,
-                plan: user.plan
+                plan: user.plan,
+                isAdmin: user.isAdmin,
+                subdomainLimit: user.subdomainLimit
               }
             }
           }
