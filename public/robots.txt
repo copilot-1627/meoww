@@ -1,0 +1,41 @@
+# FreeDNS - Robots.txt
+# https://freedns.flaxa.tech/robots.txt
+
+User-agent: *
+Allow: /
+Allow: /dashboard
+Disallow: /api/
+Disallow: /admin/
+Disallow: /_next/
+Disallow: /data/
+Disallow: /private/
+
+# Sitemap
+Sitemap: https://freedns.flaxa.tech/sitemap.xml
+Sitemap: https://freedns.flaxa.tech/sitemap-static.xml
+
+# Crawl-delay for polite crawling
+Crawl-delay: 1
+
+# Block specific bots if needed
+# User-agent: BadBot
+# Disallow: /
+
+# Allow Google, Bing, and other major search engines
+User-agent: Googlebot
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Crawl-delay: 1
+
+User-agent: Bingbot
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Crawl-delay: 1
+
+User-agent: Slurp
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+Crawl-delay: 2
