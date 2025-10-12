@@ -1,42 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-
-// Mock data structure - in production, this would fetch from your database
-let mockSubdomains = [
-  {
-    id: '1',
-    name: 'api',
-    domainName: 'freedns.tech',
-    recordType: 'A',
-    recordValue: '192.168.1.1',
-    createdAt: '2024-01-15T10:30:00Z',
-    userId: 'user1',
-    userEmail: 'john@example.com',
-    userName: 'John Doe'
-  },
-  {
-    id: '2',
-    name: 'blog',
-    domainName: 'freedns.tech',
-    recordType: 'CNAME',
-    recordValue: 'blog.example.com',
-    createdAt: '2024-01-16T14:20:00Z',
-    userId: 'user2',
-    userEmail: 'jane@example.com',
-    userName: 'Jane Smith'
-  },
-  {
-    id: '3',
-    name: 'app',
-    domainName: 'freedns.tech',
-    recordType: 'A',
-    recordValue: '203.0.113.1',
-    createdAt: '2024-01-17T09:15:00Z',
-    userId: 'user3',
-    userEmail: 'pn6009909@gmail.com',
-    userName: 'Prasad'
-  }
-]
+import { SubdomainStorage, DomainStorage, UserStorage } from '@/lib/storage'
 
 export async function GET(request: NextRequest) {
   try {
@@ -50,13 +14,57 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
     }
 
-    // In production, fetch from database:
-    // const subdomains = await SubdomainStorage.getAllWithUsers()
-    
-    return NextResponse.json(mockSubdomains)
+    console.log('Admin fetching all subdomains...')
+
+    // Fetch all subdomains from storage
+    const subdomains = await SubdomainStorage.findAll()
+    const domains = await DomainStorage.findAll()
+    const users = await UserStorage.findAll()
+
+    // Create lookup maps for efficiency
+    const domainMap = new Map(domains.map(d => [d.id, d]))
+    const userMap = new Map(users.map(u => [u.id, u]))
+
+    // Combine subdomain data with domain and user information
+    const enrichedSubdomains = await Promise.all(
+      subdomains.map(async (subdomain) => {
+        const domain = domainMap.get(subdomain.domainId)
+        const user = userMap.get(subdomain.userId)
+        
+        // Get DNS records for this subdomain
+        const dnsRecords = await import('@/lib/storage').then(({ DnsRecordStorage }) => 
+          DnsRecordStorage.findBySubdomainId(subdomain.id)
+        )
+        
+        const primaryRecord = dnsRecords.length > 0 ? dnsRecords[0] : null
+        
+        return {
+          id: subdomain.id,
+          name: subdomain.name,
+          domainName: domain?.name || 'Unknown Domain',
+          recordType: primaryRecord?.type || 'N/A',
+          recordValue: primaryRecord?.value || 'N/A',
+          createdAt: subdomain.createdAt,
+          userId: subdomain.userId,
+          userEmail: user?.email || 'Unknown User',
+          userName: user?.name || 'Unknown User',
+          active: subdomain.active
+        }
+      })
+    )
+
+    // Sort by creation date (newest first)
+    enrichedSubdomains.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+
+    console.log(`Found ${enrichedSubdomains.length} subdomains for admin`)
+
+    return NextResponse.json(enrichedSubdomains)
   } catch (error) {
     console.error('Error fetching admin subdomains:', error)
-    return NextResponse.json({ error: 'Failed to fetch subdomains' }, { status: 500 })
+    return NextResponse.json({ 
+      error: 'Failed to fetch subdomains',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
   }
 }
 
@@ -78,15 +86,23 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Subdomain ID required' }, { status: 400 })
     }
 
-    // Remove from mock data (in production, delete from database)
-    mockSubdomains = mockSubdomains.filter(sub => sub.id !== subdomainId)
+    console.log(`Admin deleting subdomain: ${subdomainId}`)
+
+    // Delete from storage (this will also delete related DNS records)
+    const success = await SubdomainStorage.delete(subdomainId)
     
-    // In production:
-    // await SubdomainStorage.delete(subdomainId)
+    if (!success) {
+      return NextResponse.json({ error: 'Subdomain not found' }, { status: 404 })
+    }
+    
+    console.log(`Successfully deleted subdomain: ${subdomainId}`)
     
     return NextResponse.json({ success: true, message: 'Subdomain deleted successfully' })
   } catch (error) {
     console.error('Error deleting subdomain:', error)
-    return NextResponse.json({ error: 'Failed to delete subdomain' }, { status: 500 })
+    return NextResponse.json({ 
+      error: 'Failed to delete subdomain',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
   }
 }
