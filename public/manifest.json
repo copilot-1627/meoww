@@ -1,16 +1,39 @@
 {
   "name": "FreeDNS - Professional DNS Services",
   "short_name": "FreeDNS",
-  "description": "Create and manage free subdomains with advanced DNS record support",
+  "description": "Professional DNS subdomain management platform with free and premium tiers. Create A, CNAME, and SRV records instantly with Cloudflare integration.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#3B82F6",
   "orientation": "portrait-primary",
-  "categories": ["productivity", "utilities"],
-  "lang": "en",
   "scope": "/",
+  "lang": "en-US",
+  "dir": "ltr",
+  "categories": ["business", "productivity", "utilities", "developer"],
+  "screenshots": [
+    {
+      "src": "/screenshot-desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "FreeDNS Desktop Dashboard"
+    },
+    {
+      "src": "/screenshot-mobile.png",
+      "sizes": "375x812",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "FreeDNS Mobile Interface"
+    }
+  ],
   "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
     {
       "src": "/android-icon-36x36.png",
       "sizes": "36x36",
@@ -45,7 +68,8 @@
       "src": "/android-icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "density": "4.0"
+      "density": "4.0",
+      "purpose": "any maskable"
     },
     {
       "src": "/android-icon-512x512.png",
@@ -53,5 +77,55 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "Access your DNS management dashboard",
+      "url": "/dashboard",
+      "icons": [
+        {
+          "src": "/android-icon-96x96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Create Subdomain",
+      "short_name": "Create",
+      "description": "Create a new subdomain",
+      "url": "/dashboard?action=create",
+      "icons": [
+        {
+          "src": "/android-icon-96x96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Pricing",
+      "short_name": "Pricing",
+      "description": "View pricing and purchase additional slots",
+      "url": "/pricing",
+      "icons": [
+        {
+          "src": "/android-icon-96x96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "edge_side_panel": {
+    "preferred_width": 320
+  },
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  }
 }
