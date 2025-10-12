@@ -1,7 +1,7 @@
 import { type ClassValue, clsx } from "clsx"
 import { twMerge } from "tailwind-merge"
-import { UserStorage } from './storage'
-import { ServerTransactionService } from './transaction-service.server'
+import { UserStorage } from './storage-mongodb'
+import { ServerTransactionService } from './transaction-service-mongodb'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -20,11 +20,11 @@ export function generateSubdomain(name: string) {
 
 /**
  * Get the effective subdomain limit for a user (base limit + purchased slots)
- * This is a server-side function that uses ServerTransactionService
+ * This is a server-side function that uses MongoDB-based ServerTransactionService
  */
 export async function getEffectiveSubdomainLimit(userId: string, userEmail?: string): Promise<number> {
   try {
-    // Get user data from database.json
+    // Get user data from MongoDB
     const user = await UserStorage.findById(userId)
     if (!user) {
       return 2 // Default limit if user not found
@@ -32,7 +32,7 @@ export async function getEffectiveSubdomainLimit(userId: string, userEmail?: str
 
     const baseLimit = user.subdomainLimit || 2
 
-    // Get purchased slots from transactions.json via ServerTransactionService
+    // Get purchased slots from MongoDB via ServerTransactionService
     const identifier = userEmail || userId
     const purchasedSlots = await ServerTransactionService.getUserSubdomainLimit(identifier)
     
@@ -50,7 +50,7 @@ export async function getEffectiveSubdomainLimit(userId: string, userEmail?: str
 
 /**
  * Update both base limit and maintain purchased slots
- * This is a server-side function that uses ServerTransactionService
+ * This is a server-side function that uses MongoDB-based ServerTransactionService
  */
 export async function setEffectiveSubdomainLimit(userId: string, newTotalLimit: number, userEmail?: string): Promise<void> {
   try {
@@ -59,19 +59,19 @@ export async function setEffectiveSubdomainLimit(userId: string, newTotalLimit: 
       throw new Error('User not found')
     }
 
-    // Get current purchased slots via ServerTransactionService
+    // Get current purchased slots via MongoDB ServerTransactionService
     const identifier = userEmail || userId
     const currentPurchasedSlots = Math.max(0, (await ServerTransactionService.getUserSubdomainLimit(identifier)) - 2)
     
     // Calculate what the new base limit should be
     const newBaseLimit = Math.max(2, newTotalLimit - currentPurchasedSlots)
     
-    // Update base limit in database.json
+    // Update base limit in MongoDB
     await UserStorage.update(userId, { subdomainLimit: newBaseLimit })
     
     // If admin is setting a limit lower than purchased slots, we need to handle this
     if (newTotalLimit < currentPurchasedSlots + 2) {
-      // Set transactions.json to maintain the desired total via ServerTransactionService
+      // Set transactions limit to maintain the desired total via MongoDB ServerTransactionService
       await ServerTransactionService.setUserSubdomainLimit(identifier, newTotalLimit)
     }
   } catch (error) {
