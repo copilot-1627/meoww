@@ -1,5 +1,5 @@
 import { requireAdmin } from "@/lib/auth-middleware"
-import { UserStorage, SubdomainStorage } from "@/lib/storage"
+import { UserStorage, SubdomainStorage } from "@/lib/storage-mongodb"
 import { getEffectiveSubdomainLimit, setEffectiveSubdomainLimit } from "@/lib/utils"
 import { NextRequest, NextResponse } from "next/server"
 
