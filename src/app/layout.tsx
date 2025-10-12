@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 import './globals.css'
-import { SessionProvider } from 'next-auth/react'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/next'
+import SessionProviderWrapper from '@/components/providers/session-provider'
 
 // Use system fonts to avoid loading issues
 const systemFonts = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif'
@@ -274,9 +274,9 @@ export default function RootLayout({
         style={{ fontFamily: systemFonts }} 
         className="min-h-screen bg-gray-50 antialiased"
       >
-        <SessionProvider>
+        <SessionProviderWrapper>
           {children}
-        </SessionProvider>
+        </SessionProviderWrapper>
         
         {/* Analytics */}
         {process.env.NODE_ENV === 'production' && (
