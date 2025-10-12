@@ -3,13 +3,14 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
-import { Menu, X, Globe } from 'lucide-react'
+import { Menu, X, Globe, Crown } from 'lucide-react'
 import { signIn, useSession } from 'next-auth/react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const { data: session, status } = useSession()
+  const isAdmin = session?.user?.email === 'pn6009909@gmail.com'
 
   const navigation = [
     { name: 'Features', href: '#features' },
@@ -53,8 +54,16 @@ export default function Header() {
             ) : session ? (
               <div className="flex items-center space-x-3">
                 <span className="text-sm text-gray-600">Welcome, {session.user?.name}</span>
-                <Button variant="outline" size="sm">
-                  Dashboard
+                {isAdmin && (
+                  <Button variant="gradient" size="sm" asChild>
+                    <a href="/admin" className="flex items-center">
+                      <Crown className="w-4 h-4 mr-2" />
+                      Admin
+                    </a>
+                  </Button>
+                )}
+                <Button variant="outline" size="sm" asChild>
+                  <a href="/dashboard">Dashboard</a>
                 </Button>
               </div>
             ) : (
@@ -102,10 +111,18 @@ export default function Header() {
               ))}
               <div className="pt-2 border-t border-gray-200">
                 {session ? (
-                  <div className="px-3 py-2">
+                  <div className="px-3 py-2 space-y-2">
                     <p className="text-sm text-gray-600 mb-2">Welcome, {session.user?.name}</p>
-                    <Button variant="outline" size="sm" className="w-full">
-                      Dashboard
+                    {isAdmin && (
+                      <Button variant="gradient" size="sm" className="w-full mb-2" asChild>
+                        <a href="/admin" className="flex items-center justify-center">
+                          <Crown className="w-4 h-4 mr-2" />
+                          Admin Panel
+                        </a>
+                      </Button>
+                    )}
+                    <Button variant="outline" size="sm" className="w-full" asChild>
+                      <a href="/dashboard">Dashboard</a>
                     </Button>
                   </div>
                 ) : (

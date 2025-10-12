@@ -35,8 +35,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# prisma
-/prisma/migrations
+# data directory (but keep .gitkeep)
+/data/database.json
+/data/*.json
+!/data/.gitkeep
 
 # IDE
 .vscode/
