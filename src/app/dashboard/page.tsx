@@ -99,6 +99,7 @@ export default function DashboardPage() {
     amount: 8
   })
   const [processingPayment, setProcessingPayment] = useState(false)
+  const [paymentError, setPaymentError] = useState<string | null>(null)
 
   useEffect(() => {
     if (session?.user?.email) {
@@ -112,10 +113,19 @@ export default function DashboardPage() {
     const script = document.createElement('script')
     script.src = 'https://checkout.razorpay.com/v1/checkout.js'
     script.async = true
+    script.onload = () => {
+      console.log('Razorpay script loaded successfully')
+    }
+    script.onerror = () => {
+      console.error('Failed to load Razorpay script')
+      setPaymentError('Failed to load payment gateway. Please refresh the page and try again.')
+    }
     document.body.appendChild(script)
     
     return () => {
-      document.body.removeChild(script)
+      if (document.body.contains(script)) {
+        document.body.removeChild(script)
+      }
     }
   }, [])
 
@@ -220,12 +230,26 @@ export default function DashboardPage() {
 
   const initializePayment = async () => {
     if (paymentData.subdomainSlots < 1) {
-      alert('Please enter a valid number of subdomain slots')
+      setPaymentError('Please enter a valid number of subdomain slots')
       return
     }
 
+    // Clear any previous errors
+    setPaymentError(null)
     setProcessingPayment(true)
+
     try {
+      // Check if Razorpay is loaded
+      if (!window.Razorpay) {
+        throw new Error('Razorpay payment gateway is not available. Please refresh the page and try again.')
+      }
+
+      // Get Razorpay key from environment
+      const razorpayKey = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID
+      if (!razorpayKey) {
+        throw new Error('Payment configuration error. Please contact support.')
+      }
+
       // Create order
       const orderResponse = await fetch('/api/payment/create-order', {
         method: 'POST',
@@ -234,14 +258,15 @@ export default function DashboardPage() {
       })
 
       if (!orderResponse.ok) {
-        throw new Error('Failed to create order')
+        const errorData = await orderResponse.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Failed to create payment order')
       }
 
       const orderData = await orderResponse.json()
 
       // Initialize Razorpay
       const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_key',
+        key: razorpayKey,
         amount: orderData.amount,
         currency: orderData.currency,
         name: 'FreeDns - Flaxa Technologies',
@@ -262,14 +287,18 @@ export default function DashboardPage() {
 
             if (verifyResponse.ok) {
               const result = await verifyResponse.json()
-              alert(result.message)
+              alert('Payment successful! ' + result.message)
               fetchDashboardData() // Refresh dashboard
               setPaymentDialogOpen(false)
             } else {
-              alert('Payment verification failed')
+              const errorData = await verifyResponse.json().catch(() => ({}))
+              alert('Payment verification failed: ' + (errorData.error || 'Unknown error'))
             }
           } catch (error) {
-            alert('Payment verification failed')
+            console.error('Payment verification error:', error)
+            alert('Payment verification failed. Please contact support if amount was deducted.')
+          } finally {
+            setProcessingPayment(false)
           }
         },
         prefill: {
@@ -277,7 +306,7 @@ export default function DashboardPage() {
           email: session?.user?.email || '',
         },
         theme: {
-          color: '#3B82F6'
+          color: '#2563eb'
         },
         modal: {
           ondismiss: () => {
@@ -286,15 +315,18 @@ export default function DashboardPage() {
         }
       }
 
-      if (window.Razorpay) {
-        const razorpay = new window.Razorpay(options)
-        razorpay.open()
-      } else {
-        alert('Payment gateway not available. Please try again.')
+      const razorpay = new window.Razorpay(options)
+      
+      razorpay.on('payment.failed', function (response: any) {
+        console.error('Payment failed:', response.error)
+        setPaymentError(`Payment failed: ${response.error.description || 'Unknown error'}`)
         setProcessingPayment(false)
-      }
-    } catch (error) {
-      alert('Failed to initialize payment')
+      })
+      
+      razorpay.open()
+    } catch (error: any) {
+      console.error('Payment initialization error:', error)
+      setPaymentError(error.message || 'Failed to initialize payment')
       setProcessingPayment(false)
     }
   }
@@ -302,7 +334,7 @@ export default function DashboardPage() {
   if (status === "loading" || loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-flaxa-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     )
   }
@@ -346,12 +378,12 @@ export default function DashboardPage() {
             <CardTitle className="flex items-center justify-between">
               <span>Subdomain Usage</span>
               <div className="flex items-center space-x-4">
-                <span className="text-lg font-bold text-flaxa-blue-600">
+                <span className="text-lg font-bold text-blue-600">
                   {stats.subdomainCount}/{stats.subdomainLimit}
                 </span>
                 <Dialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button variant="gradient" size="sm">
+                    <Button variant="gradient" size="sm" className="bg-gradient-to-r from-blue-600 to-blue-800 text-white hover:from-blue-700 hover:to-blue-900 shadow-lg">
                       <ShoppingCart className="w-4 h-4 mr-2" />
                       Buy Extra Slots
                     </Button>
@@ -365,6 +397,12 @@ export default function DashboardPage() {
                     </DialogHeader>
                     
                     <div className="space-y-6 py-4">
+                      {paymentError && (
+                        <div className="bg-red-50 border border-red-200 p-3 rounded-lg">
+                          <p className="text-sm text-red-800">{paymentError}</p>
+                        </div>
+                      )}
+                      
                       <div>
                         <Label htmlFor="slots">Number of Extra Slots</Label>
                         <Input
@@ -379,6 +417,7 @@ export default function DashboardPage() {
                               subdomainSlots: slots,
                               amount: slots * 8
                             })
+                            setPaymentError(null) // Clear error when user changes input
                           }}
                           className="mt-1"
                         />
@@ -411,7 +450,10 @@ export default function DashboardPage() {
                     <div className="flex justify-end space-x-2 pt-4">
                       <Button 
                         variant="outline" 
-                        onClick={() => setPaymentDialogOpen(false)}
+                        onClick={() => {
+                          setPaymentDialogOpen(false)
+                          setPaymentError(null)
+                        }}
                         disabled={processingPayment}
                       >
                         Cancel
@@ -433,7 +475,7 @@ export default function DashboardPage() {
           <CardContent>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div 
-                className="bg-flaxa-blue-600 h-2 rounded-full transition-all duration-300"
+                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                 style={{ width: `${(stats.subdomainCount / stats.subdomainLimit) * 100}%` }}
               />
             </div>
@@ -444,7 +486,7 @@ export default function DashboardPage() {
                   : 'No subdomain slots remaining'
                 }
               </span>
-              <span className="text-flaxa-blue-600 font-medium">
+              <span className="text-blue-600 font-medium">
                 Plan: {stats.currentPlan}
               </span>
             </div>
@@ -469,6 +511,7 @@ export default function DashboardPage() {
                       <Button 
                         variant="gradient"
                         disabled={!canCreateSubdomain || domains.length === 0}
+                        className="bg-gradient-to-r from-blue-600 to-blue-800 text-white hover:from-blue-700 hover:to-blue-900 shadow-lg"
                       >
                         <Plus className="w-4 h-4 mr-2" />
                         Create Subdomain
