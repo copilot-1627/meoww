@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { TransactionService } from '@/lib/razorpay'
+import { ServerTransactionService } from '@/lib/transaction-service.server'
 
 export async function GET(request: NextRequest) {
   try {
@@ -21,11 +21,11 @@ export async function GET(request: NextRequest) {
     let transactions
     if (isAdmin) {
       // Admin gets all transactions
-      transactions = await TransactionService.getAllTransactions()
+      transactions = await ServerTransactionService.getAllTransactions()
       console.log(`Admin ${userEmail} fetched ${transactions.length} transactions`)
     } else {
       // User gets only their transactions
-      transactions = await TransactionService.getUserTransactions(userEmail)
+      transactions = await ServerTransactionService.getUserTransactions(userEmail)
       console.log(`User ${userEmail} fetched ${transactions.length} transactions`)
     }
 
