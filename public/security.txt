@@ -1,0 +1,19 @@
+Contact: mailto:security@flaxa.tech
+Contact: https://flaxa.tech/security
+Expires: 2026-10-12T12:00:00.000Z
+Encryption: https://flaxa.tech/pgp-key.txt
+Acknowledgments: https://flaxa.tech/security-acknowledgments
+Policy: https://flaxa.tech/security-policy
+Hiring: https://flaxa.tech/careers
+
+# Security Policy for FreeDNS Platform
+# 
+# If you discover a security vulnerability in FreeDNS,
+# please report it responsibly through the contacts above.
+# 
+# We take security seriously and will respond to valid
+# reports within 24-48 hours.
+# 
+# Thank you for helping keep FreeDNS secure!
+# 
+# Flaxa Technologies Security Team
