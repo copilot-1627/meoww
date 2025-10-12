@@ -32,6 +32,7 @@ interface Subdomain {
   userId: string
   userEmail: string
   userName: string
+  active?: boolean
 }
 
 interface SubdomainStats {
@@ -48,6 +49,7 @@ export default function AdminSubdomainsPage() {
   const [domainFilter, setDomainFilter] = useState<string>('all')
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [subdomainToDelete, setSubdomainToDelete] = useState<Subdomain | null>(null)
+  const [deleting, setDeleting] = useState(false)
   const [stats, setStats] = useState<SubdomainStats>({
     totalSubdomains: 0,
     activeUsers: 0,
@@ -59,11 +61,14 @@ export default function AdminSubdomainsPage() {
   }, [])
 
   const fetchSubdomains = async () => {
+    setLoading(true)
     try {
-      // Mock API call - in real implementation, create an admin API route
+      console.log('Fetching admin subdomains...')
       const response = await fetch('/api/admin/subdomains')
+      
       if (response.ok) {
         const data = await response.json()
+        console.log(`Fetched ${data.length} subdomains`)
         setSubdomains(data)
         
         // Calculate stats
@@ -78,39 +83,27 @@ export default function AdminSubdomainsPage() {
           activeUsers: uniqueUsers,
           recordTypes
         })
+      } else {
+        console.error('Failed to fetch subdomains:', response.status, response.statusText)
+        const errorData = await response.json().catch(() => ({}))
+        console.error('Error details:', errorData)
+        
+        // Show empty state instead of mock data
+        setSubdomains([])
+        setStats({
+          totalSubdomains: 0,
+          activeUsers: 0,
+          recordTypes: {}
+        })
       }
     } catch (error) {
       console.error('Error fetching subdomains:', error)
-      // Mock data for demonstration
-      const mockData = [
-        {
-          id: '1',
-          name: 'api',
-          domainName: 'freedns.tech',
-          recordType: 'A',
-          recordValue: '192.168.1.1',
-          createdAt: '2024-01-15T10:30:00Z',
-          userId: 'user1',
-          userEmail: 'john@example.com',
-          userName: 'John Doe'
-        },
-        {
-          id: '2',
-          name: 'blog',
-          domainName: 'freedns.tech',
-          recordType: 'CNAME',
-          recordValue: 'blog.example.com',
-          createdAt: '2024-01-16T14:20:00Z',
-          userId: 'user2',
-          userEmail: 'jane@example.com',
-          userName: 'Jane Smith'
-        }
-      ]
-      setSubdomains(mockData)
+      // Show empty state on error instead of mock data
+      setSubdomains([])
       setStats({
-        totalSubdomains: mockData.length,
-        activeUsers: 2,
-        recordTypes: { 'A': 1, 'CNAME': 1 }
+        totalSubdomains: 0,
+        activeUsers: 0,
+        recordTypes: {}
       })
     } finally {
       setLoading(false)
@@ -125,7 +118,9 @@ export default function AdminSubdomainsPage() {
   const deleteSubdomain = async () => {
     if (!subdomainToDelete) return
     
+    setDeleting(true)
     try {
+      console.log('Deleting subdomain:', subdomainToDelete.id)
       const response = await fetch('/api/admin/subdomains', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
@@ -133,15 +128,20 @@ export default function AdminSubdomainsPage() {
       })
       
       if (response.ok) {
+        console.log('Subdomain deleted successfully')
         fetchSubdomains() // Refresh the list
         setDeleteDialogOpen(false)
         setSubdomainToDelete(null)
       } else {
-        alert('Failed to delete subdomain')
+        const errorData = await response.json().catch(() => ({}))
+        console.error('Failed to delete subdomain:', errorData)
+        alert(`Failed to delete subdomain: ${errorData.error || 'Unknown error'}`)
       }
     } catch (error) {
       console.error('Error deleting subdomain:', error)
-      alert('Failed to delete subdomain')
+      alert('Failed to delete subdomain. Please try again.')
+    } finally {
+      setDeleting(false)
     }
   }
 
@@ -173,7 +173,7 @@ export default function AdminSubdomainsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-flaxa-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     )
   }
@@ -309,7 +309,12 @@ export default function AdminSubdomainsPage() {
             <div className="text-center py-8 text-gray-500">
               <Globe className="w-12 h-12 mx-auto mb-4 text-gray-300" />
               <p>No subdomains found</p>
-              <p className="text-sm">Subdomains will appear here when users create them.</p>
+              <p className="text-sm">
+                {subdomains.length === 0 
+                  ? "Subdomains will appear here when users create them from their dashboard."
+                  : "Try adjusting your search filters to see more results."
+                }
+              </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -378,6 +383,7 @@ export default function AdminSubdomainsPage() {
                           size="sm"
                           onClick={() => confirmDelete(subdomain)}
                           className="text-red-600 hover:text-red-700"
+                          disabled={deleting}
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
@@ -397,7 +403,7 @@ export default function AdminSubdomainsPage() {
           <DialogHeader>
             <DialogTitle>Delete Subdomain</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete this subdomain? This action cannot be undone.
+              Are you sure you want to delete this subdomain? This action cannot be undone and will remove all associated DNS records.
             </DialogDescription>
           </DialogHeader>
           
@@ -410,11 +416,19 @@ export default function AdminSubdomainsPage() {
           )}
           
           <div className="flex justify-end space-x-2">
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+            <Button 
+              variant="outline" 
+              onClick={() => setDeleteDialogOpen(false)}
+              disabled={deleting}
+            >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={deleteSubdomain}>
-              Delete Subdomain
+            <Button 
+              variant="destructive" 
+              onClick={deleteSubdomain}
+              disabled={deleting}
+            >
+              {deleting ? 'Deleting...' : 'Delete Subdomain'}
             </Button>
           </div>
         </DialogContent>
