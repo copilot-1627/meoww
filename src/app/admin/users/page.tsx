@@ -23,6 +23,7 @@ interface User {
   image?: string
   plan: 'FREE' | 'PRO' | 'ENTERPRISE'
   subdomainLimit: number
+  baseLimit?: number // Added to show base limit from database.json
   isAdmin: boolean
   createdAt: string
   subdomainCount: number
@@ -125,7 +126,7 @@ export default function AdminUsers() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
-          <p className="text-gray-600 mt-1">Manage user accounts and subdomain limits.</p>
+          <p className="text-gray-600 mt-1">Manage user accounts and subdomain limits (shows effective limits: base + purchased).</p>
         </div>
         <div className="text-sm text-gray-500">
           {users.length} total users
@@ -157,58 +158,72 @@ export default function AdminUsers() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {filteredUsers.map((user) => (
-              <div
-                key={user.id}
-                className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                <div className="flex items-center space-x-4">
-                  <img
-                    src={user.image || '/default-avatar.png'}
-                    alt={user.name}
-                    className="w-10 h-10 rounded-full"
-                  />
-                  <div>
-                    <div className="flex items-center space-x-2">
-                      <h3 className="font-medium text-gray-900">{user.name}</h3>
-                      {user.isAdmin && (
-                        <Badge variant="secondary">Admin</Badge>
-                      )}
+            {filteredUsers.map((user) => {
+              // Calculate purchased slots for display
+              const baseLimit = user.baseLimit || 2
+              const effectiveLimit = user.subdomainLimit
+              const purchasedSlots = Math.max(0, effectiveLimit - baseLimit)
+              
+              return (
+                <div
+                  key={user.id}
+                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center space-x-4">
+                    <img
+                      src={user.image || '/default-avatar.png'}
+                      alt={user.name}
+                      className="w-10 h-10 rounded-full"
+                    />
+                    <div>
+                      <div className="flex items-center space-x-2">
+                        <h3 className="font-medium text-gray-900">{user.name}</h3>
+                        {user.isAdmin && (
+                          <Badge variant="secondary">Admin</Badge>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-600">{user.email}</p>
                     </div>
-                    <p className="text-sm text-gray-600">{user.email}</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-center space-x-4">
-                  <div className="text-right">
-                    <p className="text-sm font-medium text-gray-900">
-                      {user.subdomainCount}/{user.subdomainLimit} subdomains
-                    </p>
-                    <p className="text-xs text-gray-500 capitalize">{user.plan.toLowerCase()} plan</p>
                   </div>
                   
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => openEditDialog(user)}
-                      disabled={user.isAdmin}
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => deleteUser(user.id)}
-                      disabled={user.isAdmin}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                  <div className="flex items-center space-x-4">
+                    <div className="text-right">
+                      <p className="text-sm font-medium text-gray-900">
+                        {user.subdomainCount}/{user.subdomainLimit} subdomains
+                      </p>
+                      <p className="text-xs text-gray-500 capitalize">
+                        {user.plan.toLowerCase()} plan
+                        {purchasedSlots > 0 && (
+                          <span className="ml-1 text-blue-600">
+                            ({baseLimit} base + {purchasedSlots} purchased)
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openEditDialog(user)}
+                        disabled={user.isAdmin}
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => deleteUser(user.id)}
+                        disabled={user.isAdmin}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
 
             {filteredUsers.length === 0 && (
               <div className="text-center py-8 text-gray-500">
@@ -225,13 +240,14 @@ export default function AdminUsers() {
           <DialogHeader>
             <DialogTitle>Edit User Limits</DialogTitle>
             <DialogDescription>
-              Adjust the subdomain limit for {editingUser?.name}.
+              Adjust the total effective subdomain limit for {editingUser?.name}.
+              This will manage both base limits and purchased slots automatically.
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4 py-4">
             <div>
-              <Label htmlFor="subdomainLimit">Subdomain Limit</Label>
+              <Label htmlFor="subdomainLimit">Total Subdomain Limit</Label>
               <div className="flex items-center space-x-2 mt-1">
                 <Button
                   variant="outline"
@@ -257,9 +273,14 @@ export default function AdminUsers() {
                   <Plus className="w-4 h-4" />
                 </Button>
               </div>
-              <p className="text-sm text-gray-500 mt-1">
-                Current usage: {editingUser?.subdomainCount || 0} subdomains
-              </p>
+              <div className="text-sm text-gray-500 mt-1 space-y-1">
+                <p>Current usage: {editingUser?.subdomainCount || 0} subdomains</p>
+                {editingUser && (
+                  <p>
+                    Current: {editingUser.baseLimit || 2} base + {Math.max(0, editingUser.subdomainLimit - (editingUser.baseLimit || 2))} purchased = {editingUser.subdomainLimit} total
+                  </p>
+                )}
+              </div>
             </div>
           </div>
           
