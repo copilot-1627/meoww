@@ -23,22 +23,28 @@ export default function RootLayout({
         <meta name="theme-color" content="#3B82F6" />
         <meta name="msapplication-TileColor" content="#3B82F6" />
         
-        {/* Favicon */}
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-        <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />
-        <link rel="shortcut icon" href="/favicon.ico" />
+        {/* Favicon using logo.svg */}
+        <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+        <link rel="shortcut icon" href="/logo.svg" />
+        <link rel="apple-touch-icon" href="/logo.svg" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/logo.svg" />
+        <link rel="icon" type="image/svg+xml" sizes="32x32" href="/logo.svg" />
+        <link rel="icon" type="image/svg+xml" sizes="16x16" href="/logo.svg" />
         
-        {/* Apple Touch Icons */}
-        <link rel="apple-touch-icon" sizes="57x57" href="/apple-icon-57x57.png" />
-        <link rel="apple-touch-icon" sizes="60x60" href="/apple-icon-60x60.png" />
-        <link rel="apple-touch-icon" sizes="72x72" href="/apple-icon-72x72.png" />
-        <link rel="apple-touch-icon" sizes="76x76" href="/apple-icon-76x76.png" />
-        <link rel="apple-touch-icon" sizes="114x114" href="/apple-icon-114x114.png" />
-        <link rel="apple-touch-icon" sizes="120x120" href="/apple-icon-120x120.png" />
-        <link rel="apple-touch-icon" sizes="144x144" href="/apple-icon-144x144.png" />
-        <link rel="apple-touch-icon" sizes="152x152" href="/apple-icon-152x152.png" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/apple-icon-180x180.png" />
+        {/* Fallback PNG icons for browsers that don't support SVG favicons */}
+        <link rel="alternate icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+        <link rel="alternate icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+        <link rel="alternate icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />
+        
+        {/* Apple Touch Icons fallback */}
+        <link rel="alternate apple-touch-icon" sizes="57x57" href="/apple-icon-57x57.png" />
+        <link rel="alternate apple-touch-icon" sizes="60x60" href="/apple-icon-60x60.png" />
+        <link rel="alternate apple-touch-icon" sizes="72x72" href="/apple-icon-72x72.png" />
+        <link rel="alternate apple-touch-icon" sizes="76x76" href="/apple-icon-76x76.png" />
+        <link rel="alternate apple-touch-icon" sizes="114x114" href="/apple-icon-114x114.png" />
+        <link rel="alternate apple-touch-icon" sizes="120x120" href="/apple-icon-120x120.png" />
+        <link rel="alternate apple-touch-icon" sizes="144x144" href="/apple-icon-144x144.png" />
+        <link rel="alternate apple-touch-icon" sizes="152x152" href="/apple-icon-152x152.png" />
         
         {/* Manifest */}
         <link rel="manifest" href="/manifest.json" />
