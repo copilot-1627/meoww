@@ -16,6 +16,10 @@ module.exports = {
       },
     },
     extend: {
+      fontFamily: {
+        'sans': ['system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', '"Helvetica Neue"', 'Arial', 'sans-serif'],
+        'system': ['system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', '"Helvetica Neue"', 'Arial', 'sans-serif'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -50,7 +54,7 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        'flaxa-blue': {
+        'blue': {
           50: '#eff6ff',
           100: '#dbeafe',
           200: '#bfdbfe',
@@ -85,12 +89,17 @@ module.exports = {
           from: { transform: "translateX(-100%)" },
           to: { transform: "translateX(0)" },
         },
+        "spin": {
+          from: { transform: "rotate(0deg)" },
+          to: { transform: "rotate(360deg)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "fade-in": "fade-in 0.5s ease-out",
         "slide-in": "slide-in 0.3s ease-out",
+        "spin": "spin 1s linear infinite",
       },
     },
   },
