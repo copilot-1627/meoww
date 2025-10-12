@@ -1,6 +1,6 @@
 import { NextAuthOptions } from "next-auth"
 import GoogleProvider from "next-auth/providers/google"
-import { UserStorage, type User, isAdminEmail } from "./storage"
+import { UserStorage, isAdminEmail } from "./storage"
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -9,6 +9,14 @@ export const authOptions: NextAuthOptions = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
   ],
+  session: {
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
+  jwt: {
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
+  secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
     async signIn({ user, account, profile }) {
       if (account?.provider === 'google' && user.email) {
@@ -43,33 +51,28 @@ export const authOptions: NextAuthOptions = {
       }
       return true
     },
-    async session({ session, token }) {
-      if (session.user?.email) {
-        try {
-          const user = await UserStorage.findByEmail(session.user.email)
-          if (user) {
-            return {
-              ...session,
-              user: {
-                ...session.user,
-                id: user.id,
-                plan: user.plan,
-                isAdmin: user.isAdmin,
-                subdomainLimit: user.subdomainLimit
-              }
-            }
-          }
-        } catch (error) {
-          console.error('Error in session callback:', error)
+    async jwt({ token, user, account }) {
+      if (user && account) {
+        // Store user info in JWT token
+        const dbUser = await UserStorage.findByEmail(user.email!)
+        if (dbUser) {
+          token.id = dbUser.id
+          token.isAdmin = dbUser.isAdmin
+          token.subdomainLimit = dbUser.subdomainLimit
+          token.plan = dbUser.plan
         }
       }
-      return session
-    },
-    async jwt({ token, user, account }) {
-      if (account && user) {
-        token.accessToken = account.access_token
-      }
       return token
+    },
+    async session({ session, token }) {
+      if (session.user) {
+        // Add user info from JWT token to session
+        session.user.id = token.id as string
+        session.user.isAdmin = token.isAdmin as boolean
+        session.user.subdomainLimit = token.subdomainLimit as number
+        session.user.plan = token.plan as string
+      }
+      return session
     },
     redirect: ({ url, baseUrl }) => {
       // Redirect to dashboard after successful login
@@ -82,8 +85,5 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: '/',
     error: '/',
-  },
-  session: {
-    strategy: "jwt", // Changed from database to jwt strategy
   },
 }
