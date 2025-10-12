@@ -1,44 +1,84 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
-import { Providers } from '@/components/Providers'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
-  title: 'FreeDns - Free DNS Management Made Simple | Powered by Flaxa Technologies',
-  description: 'Manage your DNS records with ease. Get 2 free subdomains and support for SRV, A, and CNAME records. Additional subdomain slots available for ₹8 each.',
-  keywords: 'DNS, DNS management, free DNS, subdomain, SRV records, A records, CNAME records, DNS hosting, domain management',
-  authors: [{ name: 'Flaxa Technologies' }],
+  title: {
+    default: 'FreeDNS - Free DNS Services | Subdomain Management Platform',
+    template: '%s | FreeDNS'
+  },
+  description: 'Create and manage free subdomains with advanced DNS record support. Professional DNS services powered by Flaxa Technologies with A, CNAME, and SRV record management.',
+  keywords: ['free dns', 'subdomain', 'dns management', 'free subdomain', 'dns hosting', 'domain hosting', 'flaxa technologies'],
+  authors: [{ name: 'Flaxa Technologies', url: 'https://flaxa.tech' }],
   creator: 'Flaxa Technologies',
   publisher: 'Flaxa Technologies',
-  robots: 'index, follow',
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  metadataBase: new URL('https://freedns.flaxa.tech'),
+  alternates: {
+    canonical: '/',
+  },
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-    title: 'FreeDns - Free DNS Management Made Simple',
-    description: 'Manage your DNS records with ease. Get 2 free subdomains and support for SRV, A, and CNAME records.',
-    siteName: 'FreeDns',
-    images: [
-      {
-        url: '/logo.svg',
-        width: 1200,
-        height: 630,
-        alt: 'FreeDns - Free DNS Management',
-      },
-    ],
+    url: 'https://freedns.flaxa.tech',
+    title: 'FreeDNS - Free DNS Services | Subdomain Management Platform',
+    description: 'Create and manage free subdomains with advanced DNS record support. Professional DNS services powered by Flaxa Technologies.',
+    siteName: 'FreeDNS',
+    images: [{
+      url: '/og-image.png',
+      width: 1200,
+      height: 630,
+      alt: 'FreeDNS - Professional DNS Services',
+    }],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'FreeDns - Free DNS Management Made Simple',
-    description: 'Manage your DNS records with ease. Get 2 free subdomains and support for SRV, A, and CNAME records.',
-    images: ['/logo.svg'],
-    creator: '@FlaxaTech',
+    title: 'FreeDNS - Free DNS Services',
+    description: 'Create and manage free subdomains with advanced DNS record support.',
+    images: ['/og-image.png'],
+    creator: '@flaxatech',
   },
-  alternates: {
-    canonical: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+  robots: {
+    index: true,
+    follow: true,
+    nocache: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      noimageindex: false,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  icons: {
+    icon: [
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon-96x96.png', sizes: '96x96', type: 'image/png' },
+    ],
+    shortcut: '/favicon.ico',
+    apple: [
+      { url: '/apple-icon-57x57.png', sizes: '57x57' },
+      { url: '/apple-icon-60x60.png', sizes: '60x60' },
+      { url: '/apple-icon-72x72.png', sizes: '72x72' },
+      { url: '/apple-icon-76x76.png', sizes: '76x76' },
+      { url: '/apple-icon-114x114.png', sizes: '114x114' },
+      { url: '/apple-icon-120x120.png', sizes: '120x120' },
+      { url: '/apple-icon-144x144.png', sizes: '144x144' },
+      { url: '/apple-icon-152x152.png', sizes: '152x152' },
+      { url: '/apple-icon-180x180.png', sizes: '180x180' },
+    ],
+  },
+  manifest: '/manifest.json',
+  verification: {
+    google: 'your-google-site-verification-code',
   },
 }
 
@@ -50,18 +90,40 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="/favicon.ico" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-        <link rel="manifest" href="/site.webmanifest" />
-        <meta name="msapplication-TileColor" content="#3b82f6" />
-        <meta name="theme-color" content="#3b82f6" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://checkout.razorpay.com" />
+        <meta name="theme-color" content="#3B82F6" />
+        <meta name="msapplication-TileColor" content="#3B82F6" />
+        <meta name="msapplication-config" content="/browserconfig.xml" />
       </head>
       <body className={inter.className}>
-        <Providers>
-          {children}
-        </Providers>
+        {children}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'WebApplication',
+              name: 'FreeDNS',
+              description: 'Create and manage free subdomains with advanced DNS record support.',
+              url: 'https://freedns.flaxa.tech',
+              applicationCategory: 'NetworkingApplication',
+              operatingSystem: 'Web Browser',
+              offers: {
+                '@type': 'Offer',
+                price: '0',
+                priceCurrency: 'INR',
+                description: 'Free DNS subdomain management with premium options'
+              },
+              provider: {
+                '@type': 'Organization',
+                name: 'Flaxa Technologies',
+                url: 'https://flaxa.tech'
+              }
+            })
+          }}
+        />
       </body>
     </html>
   )
