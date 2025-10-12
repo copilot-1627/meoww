@@ -50,13 +50,23 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-flaxa-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     )
   }
 
   if (!isAdmin) {
-    return null
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h1>
+          <p className="text-gray-600 mb-4">You don't have permission to access the admin panel.</p>
+          <Link href="/dashboard">
+            <Button>Go to Dashboard</Button>
+          </Link>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -66,7 +76,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         <div className="flex flex-col h-full">
           {/* Header */}
           <div className="flex items-center px-6 py-4 border-b">
-            <img src="/logo.svg" alt="FreeDns" className="h-8" />
+            <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center">
+              <span className="text-white font-bold text-sm">F</span>
+            </div>
             <span className="ml-2 text-lg font-bold text-gray-900">Admin Panel</span>
           </div>
 
@@ -74,14 +86,15 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           <nav className="flex-1 px-4 py-6 space-y-2">
             {navigation.map((item) => {
               const Icon = item.icon
+              const isActive = pathname === item.href
               return (
                 <Link
                   key={item.name}
                   href={item.href}
                   className={cn(
                     "flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors",
-                    pathname === item.href
-                      ? "bg-flaxa-blue-100 text-flaxa-blue-700"
+                    isActive
+                      ? "bg-blue-100 text-blue-700"
                       : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                   )}
                 >
@@ -95,13 +108,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           {/* Footer */}
           <div className="px-4 py-4 border-t">
             <div className="flex items-center mb-3">
-              <img
-                src={session.user?.image || ''}
-                alt={session.user?.name || ''}
-                className="w-8 h-8 rounded-full"
-              />
+              <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
+                <span className="text-sm font-medium text-gray-600">
+                  {session?.user?.name?.charAt(0) || 'A'}
+                </span>
+              </div>
               <div className="ml-3">
-                <p className="text-sm font-medium text-gray-900">{session.user?.name}</p>
+                <p className="text-sm font-medium text-gray-900">{session?.user?.name || 'Administrator'}</p>
                 <p className="text-xs text-gray-500">Administrator</p>
               </div>
             </div>
