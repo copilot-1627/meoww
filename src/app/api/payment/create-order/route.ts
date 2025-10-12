@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
-import { razorpay, EXTRA_SUBDOMAIN_PRICE, TransactionService } from '@/lib/razorpay'
+import { razorpay, EXTRA_SUBDOMAIN_PRICE } from '@/lib/razorpay'
+import { ServerTransactionService } from '@/lib/transaction-service.server'
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,8 +29,8 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Create transaction record with async service
-    const transaction = await TransactionService.createTransaction({
+    // Create transaction record with server-side service
+    const transaction = await ServerTransactionService.createTransaction({
       userId: session.user.email || '',
       userEmail: session.user.email || '',
       userName: session.user.name || '',
