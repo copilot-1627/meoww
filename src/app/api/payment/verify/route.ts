@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import crypto from 'crypto'
-import { TransactionService } from '@/lib/razorpay'
+import { ServerTransactionService } from '@/lib/transaction-service.server'
 
 export async function POST(request: NextRequest) {
   try {
@@ -33,8 +33,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Payment configuration error' }, { status: 500 })
     }
 
-    // Find the transaction first
-    const transaction = await TransactionService.getTransactionByOrderId(razorpay_order_id)
+    // Find the transaction first using ServerTransactionService
+    const transaction = await ServerTransactionService.getTransactionByOrderId(razorpay_order_id)
     if (!transaction) {
       console.error('Transaction not found for order ID:', razorpay_order_id)
       return NextResponse.json({ error: 'Transaction not found' }, { status: 404 })
@@ -54,14 +54,14 @@ export async function POST(request: NextRequest) {
     })
 
     if (expectedSignature !== razorpay_signature) {
-      // Update transaction as failed
-      await TransactionService.updateTransactionStatus(razorpay_order_id, 'failed')
+      // Update transaction as failed using ServerTransactionService
+      await ServerTransactionService.updateTransactionStatus(razorpay_order_id, 'failed')
       console.error('Payment signature verification failed')
       return NextResponse.json({ error: 'Payment verification failed' }, { status: 400 })
     }
 
-    // Update transaction as paid and add subdomain slots
-    const updatedTransaction = await TransactionService.updateTransactionStatus(
+    // Update transaction as paid and add subdomain slots using ServerTransactionService
+    const updatedTransaction = await ServerTransactionService.updateTransactionStatus(
       razorpay_order_id, 
       'paid', 
       razorpay_payment_id
