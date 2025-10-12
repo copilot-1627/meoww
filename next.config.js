@@ -3,7 +3,7 @@ const nextConfig = {
   experimental: {
     appDir: true,
     typedRoutes: true,
-    serverComponentsExternalPackages: ['@vercel/analytics', '@vercel/speed-insights'],
+    serverComponentsExternalPackages: ['@vercel/analytics', '@vercel/speed-insights', 'mongodb'],
   },
   
   // Image optimization
@@ -161,8 +161,27 @@ const nextConfig = {
     ignoreBuildErrors: false,
   },
   
-  // Webpack customization for performance
+  // Webpack customization for performance and MongoDB exclusion
   webpack: (config, { dev, isServer }) => {
+    // Exclude MongoDB and other Node.js-only modules from client bundle
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+        child_process: false,
+        'mongodb-client-encryption': false,
+      }
+      
+      // Completely exclude MongoDB from client-side bundles
+      config.externals = [
+        ...config.externals || [],
+        'mongodb',
+        'mongodb-client-encryption',
+      ]
+    }
+    
     // Optimize bundle size
     if (!dev && !isServer) {
       config.optimization.splitChunks.cacheGroups = {
