@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "sitemap": "next-sitemap",
+    "analyze": "ANALYZE=true npm run build",
+    "type-check": "tsc --noEmit",
+    "seo-check": "lighthouse --output=json --output=html --form-factor=desktop --throttling-method=provided --no-enable-error-reporting --chrome-flags='--headless' https://freedns.flaxa.tech"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.0.5",
@@ -15,6 +19,8 @@
     "@radix-ui/react-select": "^2.0.0",
     "@radix-ui/react-slot": "^1.0.2",
     "@radix-ui/react-tabs": "^1.0.4",
+    "@vercel/analytics": "^1.1.1",
+    "@vercel/speed-insights": "^1.0.2",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
     "framer-motion": "^10.16.4",
@@ -22,21 +28,55 @@
     "next": "14.0.0",
     "next-auth": "^4.24.5",
     "next-seo": "^6.4.0",
+    "next-sitemap": "^4.2.3",
     "react": "^18",
     "react-dom": "^18",
     "razorpay": "^2.9.2",
+    "schema-dts": "^1.1.2",
     "tailwind-merge": "^2.0.0",
     "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
+    "@next/bundle-analyzer": "^14.0.0",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "autoprefixer": "^10",
     "eslint": "^8",
     "eslint-config-next": "14.0.0",
+    "lighthouse": "^11.0.0",
     "postcss": "^8",
     "tailwindcss": "^3",
-    "typescript": "^5"
+    "typescript": "^5",
+    "webpack-bundle-analyzer": "^4.9.1"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "keywords": [
+    "dns",
+    "subdomain",
+    "free dns",
+    "dns management",
+    "cloudflare",
+    "nextjs",
+    "typescript",
+    "razorpay",
+    "flaxa technologies"
+  ],
+  "author": {
+    "name": "Flaxa Technologies",
+    "email": "support@flaxa.tech",
+    "url": "https://flaxa.tech"
+  },
+  "homepage": "https://freedns.flaxa.tech",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/copilot-1627/meoww.git"
+  },
+  "bugs": {
+    "url": "https://github.com/copilot-1627/meoww/issues",
+    "email": "support@flaxa.tech"
   }
 }
