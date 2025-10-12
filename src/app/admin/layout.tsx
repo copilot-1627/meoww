@@ -4,7 +4,7 @@ import { useSession } from "next-auth/react"
 import { redirect } from "next/navigation"
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Users, Globe, BarChart3, Settings, Home, LogOut } from "lucide-react"
+import { Users, Globe, BarChart3, Receipt, Home, LogOut, Database } from "lucide-react"
 import { signOut } from "next-auth/react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -24,7 +24,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { name: 'Overview', href: '/admin', icon: BarChart3 },
     { name: 'Users', href: '/admin/users', icon: Users },
     { name: 'Domains', href: '/admin/domains', icon: Globe },
-    { name: 'Settings', href: '/admin/settings', icon: Settings },
+    { name: 'Transactions', href: '/admin/transactions', icon: Receipt },
+    { name: 'Subdomain Management', href: '/admin/subdomains', icon: Database },
   ]
 
   useEffect(() => {
