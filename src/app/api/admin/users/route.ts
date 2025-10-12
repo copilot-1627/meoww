@@ -1,5 +1,6 @@
 import { requireAdmin } from "@/lib/auth-middleware"
 import { UserStorage, SubdomainStorage } from "@/lib/storage"
+import { getEffectiveSubdomainLimit, setEffectiveSubdomainLimit } from "@/lib/utils"
 import { NextRequest, NextResponse } from "next/server"
 
 export async function GET() {
@@ -11,13 +12,17 @@ export async function GET() {
   try {
     const users = await UserStorage.findAll()
     
-    // Get subdomain count for each user
+    // Get subdomain count and effective limit for each user
     const usersWithCounts = await Promise.all(
       users.map(async (user) => {
         const subdomainCount = await SubdomainStorage.countByUserId(user.id)
+        const effectiveLimit = await getEffectiveSubdomainLimit(user.id, user.email)
+        
         return {
           ...user,
-          subdomainCount
+          subdomainCount,
+          subdomainLimit: effectiveLimit, // Show effective limit instead of base limit
+          baseLimit: user.subdomainLimit, // Keep base limit for reference
         }
       })
     )
@@ -42,11 +47,13 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid parameters' }, { status: 400 })
     }
 
-    const updatedUser = await UserStorage.update(userId, { subdomainLimit })
-    
-    if (!updatedUser) {
+    const user = await UserStorage.findById(userId)
+    if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
+
+    // Use the new function to set effective limit properly
+    await setEffectiveSubdomainLimit(userId, subdomainLimit, user.email)
 
     return NextResponse.json({ success: true })
   } catch (error) {
