@@ -16,7 +16,7 @@ export interface User {
 
 export interface Domain {
   id: string
-  name: string // e.g., "example.com"
+  name: string
   cloudflareZoneId: string
   cloudflareApiKey: string
   active: boolean
@@ -26,7 +26,7 @@ export interface Domain {
 
 export interface Subdomain {
   id: string
-  name: string // e.g., "myapp" for myapp.example.com
+  name: string
   domainId: string
   userId: string
   active: boolean
@@ -77,16 +77,26 @@ async function ensureDataDir() {
 async function initializeDatabase(): Promise<DatabaseSchema> {
   await ensureDataDir()
   
+  const initialData: DatabaseSchema = {
+    users: [],
+    domains: [],
+    subdomains: [],
+    dnsRecords: []
+  }
+  
   try {
     const data = await fs.readFile(DATA_FILE, 'utf-8')
-    return JSON.parse(data)
-  } catch {
-    const initialData: DatabaseSchema = {
-      users: [],
-      domains: [],
-      subdomains: [],
-      dnsRecords: []
+    const parsed = JSON.parse(data)
+    
+    // Ensure all required properties exist with proper defaults
+    return {
+      users: Array.isArray(parsed.users) ? parsed.users : [],
+      domains: Array.isArray(parsed.domains) ? parsed.domains : [],
+      subdomains: Array.isArray(parsed.subdomains) ? parsed.subdomains : [],
+      dnsRecords: Array.isArray(parsed.dnsRecords) ? parsed.dnsRecords : []
     }
+  } catch (error) {
+    console.log('Initializing new database file')
     await fs.writeFile(DATA_FILE, JSON.stringify(initialData, null, 2))
     return initialData
   }
@@ -96,7 +106,15 @@ async function initializeDatabase(): Promise<DatabaseSchema> {
 async function readDatabase(): Promise<DatabaseSchema> {
   try {
     const data = await fs.readFile(DATA_FILE, 'utf-8')
-    return JSON.parse(data)
+    const parsed = JSON.parse(data)
+    
+    // Ensure all required properties exist with proper defaults
+    return {
+      users: Array.isArray(parsed.users) ? parsed.users : [],
+      domains: Array.isArray(parsed.domains) ? parsed.domains : [],
+      subdomains: Array.isArray(parsed.subdomains) ? parsed.subdomains : [],
+      dnsRecords: Array.isArray(parsed.dnsRecords) ? parsed.dnsRecords : []
+    }
   } catch {
     return await initializeDatabase()
   }
@@ -206,7 +224,7 @@ export class DomainStorage {
     const db = await readDatabase()
     
     // Check if domain name already exists
-    const existing = await this.findByName(domainData.name)
+    const existing = db.domains.find(domain => domain.name === domainData.name)
     if (existing) {
       throw new Error('Domain name already exists')
     }
@@ -285,7 +303,9 @@ export class SubdomainStorage {
     const db = await readDatabase()
     
     // Check if subdomain name already exists for this domain
-    const existing = await this.findByNameAndDomain(subdomainData.name, subdomainData.domainId)
+    const existing = db.subdomains.find(subdomain => 
+      subdomain.name === subdomainData.name && subdomain.domainId === subdomainData.domainId
+    )
     if (existing) {
       throw new Error('Subdomain already exists for this domain')
     }
