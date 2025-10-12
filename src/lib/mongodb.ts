@@ -1,11 +1,25 @@
 import { MongoClient, Db } from 'mongodb'
 
+// Ensure this module only runs on the server side
+if (typeof window !== 'undefined') {
+  throw new Error('MongoDB client should only be used on the server side')
+}
+
 if (!process.env.MONGODB_URI) {
   throw new Error('Invalid/Missing environment variable: "MONGODB_URI"')
 }
 
 const uri = process.env.MONGODB_URI
-const options = {}
+
+// MongoDB connection options to disable client-side encryption
+const options = {
+  // Disable client-side field level encryption which uses child_process
+  autoEncryption: undefined,
+  // Other performance options
+  maxPoolSize: 10,
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000,
+}
 
 let client: MongoClient
 let clientPromise: Promise<MongoClient>
@@ -33,6 +47,11 @@ if (process.env.NODE_ENV === 'development') {
 export default clientPromise
 
 export async function getDatabase(): Promise<Db> {
-  const client = await clientPromise
-  return client.db('freedns')
+  try {
+    const client = await clientPromise
+    return client.db('freedns')
+  } catch (error) {
+    console.error('Failed to connect to MongoDB:', error)
+    throw new Error('Database connection failed')
+  }
 }
