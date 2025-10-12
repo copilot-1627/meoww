@@ -1,26 +1,14 @@
-import { type ClassValue, clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
+// Re-export client-safe functions
+export { cn, formatPrice, generateSubdomain } from './utils-client'
+
+// Server-side only imports and functions
 import { UserStorage } from './storage-mongodb'
 import { ServerTransactionService } from './transaction-service-mongodb'
-
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
-}
-
-export function formatPrice(price: number) {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-  }).format(price)
-}
-
-export function generateSubdomain(name: string) {
-  return name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
-}
 
 /**
  * Get the effective subdomain limit for a user (base limit + purchased slots)
  * This is a server-side function that uses MongoDB-based ServerTransactionService
+ * @server-only
  */
 export async function getEffectiveSubdomainLimit(userId: string, userEmail?: string): Promise<number> {
   try {
@@ -51,6 +39,7 @@ export async function getEffectiveSubdomainLimit(userId: string, userEmail?: str
 /**
  * Update both base limit and maintain purchased slots
  * This is a server-side function that uses MongoDB-based ServerTransactionService
+ * @server-only
  */
 export async function setEffectiveSubdomainLimit(userId: string, newTotalLimit: number, userEmail?: string): Promise<void> {
   try {
